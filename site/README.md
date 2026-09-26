@@ -46,6 +46,11 @@ Commentary callouts (`annotations[]`) are drawn on these chart ids: `np_trend` (
 (au-status), `nw_dollars` (nw-overview), `nw_behested` (nw-behested); `x` is the category (fiscal or
 calendar year) and `series` optionally picks a line. The bundler warns about any other id.
 
+Per-entity extras listed in `EACH` in `tools/contracts.py` (for now `performance/scorecards/<DEPT>.json`, the
+department scorecard's commentary) are bundled as one optional file per id. `content/overrides.json` holds
+exact-text corrections to module commentary, applied to the bundled copy only (the loader then always uses
+it); the bundler warns when a correction no longer matches, meaning the module has fixed its text.
+
 Rerun the bundler whenever a module re-exports. Site-level commentary (home, search, methods, entity
 pages) lives in `site/content/commentary/`.
 
@@ -64,8 +69,10 @@ headless Chrome, reports console errors, and writes screenshots to `/tmp/scm_sit
 in-page self-test (`index.html?selftest=1`, also usable by hand), which:
 
 - checks the statistics code (quantiles, histogram, cumulative incidence with censoring, deflation,
-  null-safe sums, window coverage) and recomputes the ban-window base rate from the contract windows
-  against the exporter's figure;
+  null-safe sums, window coverage); checks that the ban-window chance benchmark is the exporter's matched
+  pair (`base_rates.expected_share_matched` / `observed_share_matched`, difference inside its 95% interval),
+  that nw-ban, nw-overview and the landing page show it, and that the contract's pooled
+  `expected_share_if_unrelated` (which overstates chance) appears on none of them;
 - on every dashboard view sets each declared filter and checks that the view's numbers and its
   "Data on this page" strip both change, that the filter bar shows exactly the declared filters,
   that undeclared ones are labelled "Not on this view: … (reason)", and that counts are registered;

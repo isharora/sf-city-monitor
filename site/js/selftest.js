@@ -1,6 +1,6 @@
 /* selftest.js - ?selftest=1
    1. Statistics checks for the pooling code (quantiles, histogram, cumulative incidence with censoring,
-      deflation, null-safe sums, the ban-window base rate against the exporter's figure).
+      deflation, null-safe sums, the matched ban-window base rate and that the pooled chance figure is shown nowhere).
    2. For every dashboard view: renders it with default filters, then sets each filter the view
       declares (one at a time) and checks that the view's numbers change AND the "Data on this page"
       strip changes (record counts; for Real/Nominal, the units item). Checks that every dashboard
@@ -40,15 +40,31 @@
     }
   }
   async function baseRateCheck() {
+    // The chance benchmark is the exporter's matched pair (base_rates.expected_share_matched / observed_share_matched);
+    // the contract's pooled expected_share_if_unrelated overstates chance and must not be shown anywhere.
     try {
       const ban = await M.data.load('network/analyses/ban_window.json');
-      const pub = ban.base_rates && ban.base_rates.expected_share_if_unrelated;
-      const dates = String((ban.base_rates && ban.base_rates.expected_note) || '').match(/\d{4}-\d{2}-\d{2}/g);
-      const nw = M.METAS.nw, lo = dates && dates.length >= 2 ? dates[0] : `${nw.years.min}-01-01`, hi = dates && dates.length >= 2 ? dates[1] : [`${nw.years.max}-12-31`, nw.as_of].sort()[0];
-      const mine = M.nw.expectedShare(ban.records.filter((r) => r.date >= lo && r.date <= hi), ban.contracts, lo, hi); // records dated in the period, as the exporter weights them
-      add('stats', `ban-window base rate recomputed from contract windows is within 2 points of the exporter (${lo} to ${hi})`, near(mine, pub, 0.02), `site ${mine == null ? '–' : mine.toFixed(3)} vs export ${pub}`);
+      const b = ban.base_rates || {}, mb = M.nw.matchedBase(ban), inUnit = (x) => typeof x === 'number' && x > 0 && x < 1;
+      add('stats', 'ban-window matched base rate is in the export (expected and observed shares between 0 and 1)', !!mb && inUnit(b.expected_share_matched) && inUnit(b.observed_share_matched), `expected ${b.expected_share_matched}, observed ${b.observed_share_matched}, n ${b.matched_n_records}`);
+      if (mb && mb.ci) add('stats', 'matched observed minus expected lies inside the exported 95% interval', mb.observed - mb.expected >= mb.ci[0] - 1e-9 && mb.observed - mb.expected <= mb.ci[1] + 1e-9, `${(mb.observed - mb.expected).toFixed(3)} in [${mb.ci.join(', ')}]`);
+      if (!mb) return;
+      const pooled = b.expected_share_if_unrelated, F = M.stats.fmt;
+      const stale = typeof pooled === 'number' && Math.abs(pooled - mb.expected) > 0.005 ? [F.pct(pooled), F.pct(pooled, 1)] : [];
+      const staleRe = stale.length ? new RegExp(`(^|[^\\d.])(${stale.map((x) => x.replace('.', '\\.')).join('|')})`) : null;
+      for (const vid of ['nw-ban', 'nw-overview', 'home']) {
+        await show(defaults(vid));
+        const txt = document.getElementById('content').textContent;
+        const clone = document.getElementById('content').cloneNode(true); clone.querySelectorAll('.ax-label').forEach((e) => e.remove()); const txtNoAxis = clone.textContent; // axis ticks (…40%, 45%…) are not claims
+        if (vid === 'nw-ban') {
+          const bar = [...document.querySelectorAll('#content .card')].find((c) => /Observed vs expected by chance/.test((c.querySelector('.card-title') || {}).textContent || ''));
+          const btxt = bar ? bar.textContent : '';
+          add('stats', 'nw-ban: the chance bar and the live sentence show the matched expected and observed shares', btxt.includes(mb.expected_fmt) && btxt.includes(mb.observed_fmt) && (document.querySelector('#content .live-slot') || {}).textContent.includes(mb.expected_fmt), `looking for ${mb.expected_fmt} and ${mb.observed_fmt}`);
+        } else add('stats', `${vid}: shows the matched base rate`, txt.includes(mb.expected_fmt) && txt.includes(mb.observed_fmt), `looking for ${mb.expected_fmt} and ${mb.observed_fmt}`);
+        if (staleRe) { const m = txtNoAxis.match(staleRe); add('stats', `${vid}: the pooled chance figure (${stale[0]}) appears nowhere on the page (axis ticks aside)`, !m, m ? `found "${txtNoAxis.slice(Math.max(0, m.index - 60), m.index + 10)}"` : ''); }
+      }
     } catch (e) { add('stats', 'ban-window base rate', true, `skipped: ${e.message}`); }
   }
+
 
   // ------------------------------------------------------------------ view checks
   const S = () => M.state;

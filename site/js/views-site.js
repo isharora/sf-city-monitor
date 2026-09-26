@@ -41,7 +41,7 @@
         np: m.np && [kp('organizations', fmt.int(c_(m.np, 'organizations'))), kp('paid, all years', fmt.money(c_(m.np, 'total_paid_all_years'))), kp('monitoring results', fmt.int(c_(m.np, 'monitoring_results')))],
         pf: m.pf && [kp('departments', fmt.int(c_(m.pf, 'departments') != null ? c_(m.pf, 'departments') : m.pf.dimensions.dept.values.length)), kp('measures tracked', fmt.int(c_(m.pf, 'measures') != null ? c_(m.pf, 'measures') : c_(m.pf, 'measures_current'))), kp('fiscal years', `${m.pf.fiscal_years.min}–${m.pf.fiscal_years.max}`)],
         au: m.au && [kp('recommendations', fmt.int(c_(m.au, 'recommendations'))), kp('reports', fmt.int(c_(m.au, 'reports'))), kp('years', `${m.au.years.min}–${m.au.years.max}`)],
-        nw: m.nw && [kp('entities', fmt.int(c_(m.nw, 'entities'))), kp('flows', fmt.int(c_(m.nw, 'flows'))), kp('individuals aggregated', fmt.int(c_(m.nw, 'individuals_aggregated')))],
+        nw: m.nw && (() => { const bm = (((ctx.site.modules || {}).network || {}).highlights || {}).ban_matched; return [kp('entities', fmt.int(c_(m.nw, 'entities'))), kp('individuals aggregated', fmt.int(c_(m.nw, 'individuals_aggregated'))), bm ? kp('principals’ gifts in a ban window (' + fmt.pct(bm.expected_share_matched, 1) + ' by chance)', fmt.pct(bm.observed_share_matched, 1)) : kp('flows', fmt.int(c_(m.nw, 'flows')))]; })(),
       };
       Object.values(M.dashes).forEach((d) => {
         const c = ctx.h('a', 'card dash-card', cards); c.href = M.state.serialise(Object.assign({}, M.state.DEFAULTS, { view: d.views[0] }));

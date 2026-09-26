@@ -225,10 +225,18 @@
       const sc = scope(ctx), { st } = sc;
       const rev = ctx.data.rev.rows.filter((r) => sc.orgSet.has(r.org) && r.fy >= sc.y0 && r.fy <= sc.y1 && inList(st.dept, r.lead_dept));
       ctx.feed('monitoring results', rev.length, ctx.data.rev.rows.length);
-      const results = ctx.data.rev.results || ctx.meta.dimensions.result.values, elev = rev.filter((r) => r.result === 'elevated' || r.result === 'redflag');
+      // Lead departments are published only for some monitoring years; rows without one cannot be assigned to a
+      // department, so they appear under all departments only (and are labelled), never silently dropped.
+      const noLead = ctx.data.rev.rows.filter((r) => !r.lead_dept && sc.orgSet.has(r.org) && r.fy >= sc.y0 && r.fy <= sc.y1);
+      const noLeadYears = [...new Set(ctx.data.rev.rows.filter((r) => !r.lead_dept).map((r) => r.fy))].sort((a, b) => a - b);
+      const leadLabel = (r) => (r.lead_dept ? ctx.deptShort(r.lead_dept) : 'not published');
+      const results =ctx.data.rev.results || ctx.meta.dimensions.result.values, elev = rev.filter((r) => r.result === 'elevated' || r.result === 'redflag');
       Object.assign(ctx.slots, { reviews: rev.length, reviews_fmt: fmt.int(rev.length), orgs_fmt: fmt.int(new Set(rev.map((r) => r.org)).size), none_share: fmt.pct(rev.filter((r) => r.result === 'none').length / (rev.length || 1)), elev_fmt: fmt.int(elev.length) });
       ctx.live('reviews');
       ctx.fair('A monitoring result is a review of fiscal and compliance practices, not a judgment of an organization’s mission or program quality. Every row cites the Controller’s report.', 'Reading the results');
+      if (noLeadYears.length) ctx.fair(st.dept.length
+        ? `A department filter keeps only results whose lead department is published. The Controller names a lead department only in its FY2022 and FY2023 monitoring datasets, so ${fmt.int(noLead.length)} result${noLead.length === 1 ? '' : 's'} for organizations this department funds ${noLead.length === 1 ? 'is' : 'are'} not shown here; clear the department filter to see ${noLead.length === 1 ? 'it' : 'them'}, labelled “lead department not published”.`
+        : `The Controller names a lead department only in its FY2022 and FY2023 monitoring datasets. Results from other years (${noLeadYears.map((y) => 'FY' + y).join(', ')}), and a few names that could not be matched, show the lead department as “not published” and appear only when no department is selected.`, 'Lead department');
       const firstFy = Math.min(...ctx.data.rev.rows.map((r) => r.fy)), years = ctx.yearList().filter((y) => y >= firstFy);
       // Ordinal ramp in the order of the published scale (light = no findings, dark = red flag).
       const COL = {}; results.forEach((r, i) => (COL[r.id] = `var(--ord-${Math.min(5, i + 1 + Math.max(0, 5 - results.length))})`));
@@ -244,7 +252,7 @@
       } });
       ctx.card({ title: 'Elevated concern and red flag', sub: 'Each row cites the report; click an organization to open its profile', span: 12, render(el) {
         if (!elev.length) return ctx.empty(el, 'None under these filters');
-        return C.dataTable(el, { rows: elev, pageSize: 20, sort: 'fy', dir: 'desc', cols: [{ key: 'org', label: 'Organization', text: (r) => sc.org(r.org).name, render: (td, r) => td.appendChild(sc.orgLink(sc.org(r.org))) }, { key: 'fy', label: 'FY', num: true }, { key: 'lead_dept', label: 'Lead dept', text: (r) => ctx.deptShort(r.lead_dept) }, { key: 'result', label: 'Result', text: (r) => (results.find((x) => x.id === r.result) || { label: r.result }).label }, { key: 'categories', label: 'Findings', text: (r) => r.categories.join('; ') }, { key: 'note', label: 'Note', text: (r) => r.note || '' }, { key: 'report', label: 'Source (report and page)', text: (r) => `${r.report.title}${r.report.page ? ', p. ' + r.report.page : ''}`, render: (td, r) => { const t = `${r.report.title}${r.report.page ? ', p. ' + r.report.page : ''}`; if (r.report.url) { const a = ctx.h('a', 'link', td, t); a.href = r.report.url + (r.report.page ? `#page=${r.report.page}` : ''); a.target = '_blank'; a.rel = 'noopener'; } else td.textContent = t; } }] });
+        return C.dataTable(el, { rows: elev, pageSize: 20, sort: 'fy', dir: 'desc', cols: [{ key: 'org', label: 'Organization', text: (r) => sc.org(r.org).name, render: (td, r) => td.appendChild(sc.orgLink(sc.org(r.org))) }, { key: 'fy', label: 'FY', num: true }, { key: 'lead_dept', label: 'Lead dept', text: leadLabel }, { key: 'result', label: 'Result', text: (r) => (results.find((x) => x.id === r.result) || { label: r.result }).label }, { key: 'categories', label: 'Findings', text: (r) => r.categories.join('; ') }, { key: 'note', label: 'Note', text: (r) => r.note || '' }, { key: 'report', label: 'Source (report and page)', text: (r) => `${r.report.title}${r.report.page ? ', p. ' + r.report.page : ''}`, render: (td, r) => { const t = `${r.report.title}${r.report.page ? ', p. ' + r.report.page : ''}`; if (r.report.url) { const a = ctx.h('a', 'link', td, t); a.href = r.report.url + (r.report.page ? `#page=${r.report.page}` : ''); a.target = '_blank'; a.rel = 'noopener'; } else td.textContent = t; } }] });
       } });
     },
   };

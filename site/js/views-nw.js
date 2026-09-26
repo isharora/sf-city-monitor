@@ -38,15 +38,15 @@
     if (cur) days += cur[1] - cur[0];
     return days / (H - L);
   }
-  /** Expected share of records inside a window if timing were unrelated to contracts (uses window_post_approval when
-      the exporter supplies it, as its base-rate note specifies): each contractor's window
-      coverage of the period, weighted by its number of records (the contract's definition), for any record subset. */
-  function expectedShare(records, contracts, lo, hi) {
-    const by = new Map(); for (const r of records) by.set(r.contractor, (by.get(r.contractor) || 0) + 1);
-    const byC = new Map(); for (const c of contracts) { if (!byC.has(c.contractor)) byC.set(c.contractor, []); byC.get(c.contractor).push(c); }
-    let num = 0, den = 0;
-    for (const [cid, k] of by) { num += coverage((byC.get(cid) || []).filter((c) => Array.isArray(c.window_post_approval || c.window)).map((c) => c.window_post_approval || c.window), lo, hi) * k; den += k; }
-    return den ? num / den : null;
+  const pts = (x) => fmt.signedPct(x, 1).replace('%', ' points');
+
+  /** The matched ban-window base rate from analyses/ban_window.json › base_rates, or null when the export lacks it. */
+  function matchedBase(ban) {
+    const b = (ban && ban.base_rates) || {}, ok = (x) => typeof x === 'number' && x >= 0 && x <= 1;
+    if (!ok(b.expected_share_matched) || !ok(b.observed_share_matched)) return null;
+    const period = (String(b.matched_note || '').match(/\b(\d{4})-(\d{4})\b/) || []).slice(1);
+    return { expected: b.expected_share_matched, observed: b.observed_share_matched, n: b.matched_n_records || null, ci: Array.isArray(b.matched_difference_95ci) && b.matched_difference_95ci.length === 2 ? b.matched_difference_95ci : null,
+      note: b.matched_note || '', period: period.length ? `${period[0]} to ${period[1]}` : null, expected_fmt: fmt.pct(b.expected_share_matched, 1), observed_fmt: fmt.pct(b.observed_share_matched, 1) };
   }
 
   // ---------------------------------------------------------------- overview
@@ -59,12 +59,12 @@
       ctx.live('ov'); fairnessBox(ctx);
       const flowIds = new Set(flows.map((f) => f.id)), banIn = ctx.data.ban.records.filter((r) => flowIds.has(r.flow)), review = banIn.filter(isReview);
       ctx.feed('contractor-affiliated contribution records', banIn.length, ctx.data.ban.records.length);
-      const tiles = ctx.h('div', 'tiles', ctx.pre);
+      const tiles = ctx.h('div', 'tiles', ctx.pre), mbO = matchedBase(ctx.data.ban);
       const tile = (label, value, foot, patch) => { const t = ctx.h('button', 'tile', tiles); t.type = 'button'; ctx.h('div', 'tile-label', t, label); ctx.h('div', 'tile-value', t, value); ctx.h('div', 'tile-foot', t).appendChild(document.createTextNode(foot)); t.addEventListener('click', () => M.state.set(patch)); };
       tile('Flows in your filters', fmt.int(flows.length), `${fmt.money(st_.sum(flows, (f) => f.amount || 0))} with a dollar amount`, { view: 'nw-graph' });
       tile('Entities connected', fmt.int(sc.entSet.size), `${fmt.int([...sc.entSet].filter((id) => sc.typeOf(id) === 'individuals').length)} aggregate individual nodes`, { view: 'nw-entities' });
       tile('Behested payments', fmt.money(st_.sum(flows.filter((f) => f.type === 'behested'), 'amount')), `${fmt.int(flows.filter((f) => f.type === 'behested').length)} payments`, { view: 'nw-behested' });
-      tile(ctx.ruleOf('ban') ? `Contributions that appear to warrant review (${ctx.ruleOf('ban').cite.replace(/^.*(§[\d.]+).*$/, '$1')})` : 'Contributions inside a ban window to a covered official', fmt.int(review.length), `of ${fmt.int(banIn.length)} contractor-affiliated records · a pattern worth checking, not proof`, { view: 'nw-ban' });
+      tile(ctx.ruleOf('ban') ? `Contributions that appear to warrant review (${ctx.ruleOf('ban').cite.replace(/^.*(§[\d.]+).*$/, '$1')})` : 'Contributions inside a ban window to a covered official', fmt.int(review.length), `of ${fmt.int(banIn.length)} contractor-affiliated records · a pattern worth checking, not proof` + (mbO ? ` · all years: ${mbO.observed_fmt} of principals’ contributions fell inside a window vs ${mbO.expected_fmt} expected by chance (matched benchmark, not filtered)` : ''), { view: 'nw-ban' });
       ctx.card({ title: 'Dollars by year and flow type', sub: 'Lobbying contacts have no amount and are not in this chart', span: 7, render(el) {
         const dollar = flows.filter((f) => f.amount != null); if (!dollar.length) return ctx.empty(el, 'No flows with an amount match');
         return C.stackedBars(el, { categories: years, series: types.filter((t) => t.id !== 'lobby_contact').map((t) => ({ id: t.id, label: t.label, color: FLOW_COLOR[t.id], values: years.map((y) => st_.sum(dollar.filter((f) => f.type === t.id && +f.date.slice(0, 4) === y), 'amount')) })), yTitle: 'Dollars', annotations: M.commentary.annotationsFor(ctx.commentary, 'nw_dollars'), aria: 'Dollars by year' });
@@ -120,8 +120,8 @@
 
   // ---------------------------------------------------------------- ban window
   M.views['nw-ban'] = {
-    id: 'nw-ban', dash: 'nw', nav: 'Contributions and the ban window', title: 'Contractor contributions and the ban window', what: 'Contributions by contractor-affiliated individuals, placed in time against the contracts those contractors won.',
-    how: 'Each dot is an aggregated contribution record from individuals affiliated with a contractor, placed by days from the nearest contract approval; the shaded band is the §1.126 window (proposal to 12 months after approval). Compare the observed share inside a window with the share expected by chance, shown beside it.',
+    id: 'nw-ban', dash: 'nw', nav: 'Contributions and the ban window', title: 'Contractor contributions and the ban window', what: 'Contributions by the disclosed principals of city contractors, placed in time against the contracts those contractors won.',
+    how: 'Each dot is a contribution by a person name-matched to a principal (board member, officer or owner of more than 10%) listed on the contractor’s SFEC-126(f)4 filings, placed by days from the nearest contract approval; the shaded band is the §1.126 window (proposal to 12 months after approval). Compare the observed share inside a window with the matched share expected by chance, shown below.',
     filters: ['years', 'etype', 'amt'], absent: { flow: 'this view is contributions only' }, files: Object.assign({ ban: 'network/analyses/ban_window.json' }, FILES),
     render(ctx) {
       const sc = scope(ctx, { ignoreFlow: true }), ban = ctx.data.ban;
@@ -130,38 +130,46 @@
       ctx.feed('contractor-affiliated contribution records', recs.length, ban.records.length); const knownC = new Set(ban.contracts.map((c) => c.contract)); ctx.feed('contracts with an SFEC-126(f)4 notice', new Set(recs.map((r) => r.nearest_contract).filter((c) => knownC.has(c))).size, knownC.size);
       const inside = recs.filter((r) => r.inside_window), covered = recs.filter((r) => r.inside_window && r.covered_official), flagged = covered.filter(isReview);
       // Base rate for exactly the records in view, over the selected years (capped at the data's as-of date).
-      const lo = `${sc.y0}-01-01`, hi = [`${sc.y1}-12-31`, ctx.meta.as_of].sort()[0];
-      const exp = recs.length ? expectedShare(recs, ban.contracts, lo, hi) : null, expAll = ban.base_rates.expected_share_if_unrelated;
-      Object.assign(ctx.slots, { __small: recs.length < ctx.meta.small_n, records: recs.length, records_fmt: fmt.int(recs.length), contracts_fmt: fmt.int(new Set(recs.map((r) => r.nearest_contract)).size), inside_fmt: fmt.int(inside.length), inside_share: fmt.pct(recs.length ? inside.length / recs.length : null), expected_share: fmt.pct(exp), covered_fmt: fmt.int(flagged.length), covered_all_fmt: fmt.int(covered.length) });
+      // Base rate: the exporter's matched benchmark (approvals that list the donor and whose approving office covered the
+      // recipient, days weighted by the election calendar). The contract's pooled expected_share_if_unrelated counts every
+      // window a contractor has and overstates chance, so it is never shown.
+      const mb = matchedBase(ban);
+      Object.assign(ctx.slots, { __small: recs.length < ctx.meta.small_n, records: recs.length, records_fmt: fmt.int(recs.length), contracts_fmt: fmt.int(new Set(recs.map((r) => r.nearest_contract)).size), inside_fmt: fmt.int(inside.length), inside_share: fmt.pct(recs.length ? inside.length / recs.length : null), expected_share: mb ? mb.expected_fmt : null, observed_matched: mb ? mb.observed_fmt : null, matched_n_fmt: mb ? fmt.int(mb.n) : null, covered_fmt: fmt.int(flagged.length), covered_all_fmt: fmt.int(covered.length) });
       ctx.live('ban');
       ctx.rule('ban');
-      ctx.fair(`${ctx.meta.fairness.timing} ${ctx.meta.fairness.review} Individuals are attributed to a contractor through the employer and occupation fields on Form 460 and the principals listed on SFEC-126(f)4; they are never named here.`, 'Read this view with the base rate');
+      ctx.fair(`${ctx.meta.fairness.timing} ${ctx.meta.fairness.review} The records here are contributions by people name-matched to the principals listed on the contractor’s SFEC-126(f)4 filings (board members, officers, owners of more than 10%), not by employer; they are never named here. Employees who name a contractor as their employer are not covered by §1.126 and are not in this view.`, 'Read this view with the base rate');
       const contractOf = new Map(ban.contracts.map((c) => [c.contract, c]));
       ctx.card({ title: 'Contributions by days from the nearest contract approval', sub: 'Shaded: the §1.126 window (about 6 months before to 12 months after approval); colour: outside, inside, inside and to a covered official', span: 12, render(el) {
         if (!recs.length) return ctx.empty(el, 'No records match');
         return C.dotStrip(el, { points: recs.map((r) => ({ t: r.days_from_approval, amount: r.amount, label: `${sc.name(r.contractor)} → ${sc.name(r.committee)}`, color: r.covered_official ? 'var(--div-neg-2)' : r.inside_window ? 'var(--series-2)' : 'var(--neutral-2)', tag: isReview(r) && ctx.ruleOf('ban') ? `Appears to warrant review (${ctx.ruleOf('ban').cite}): inside the window and to a covered official. Pattern worth checking, not proof.` : r.inside_window && r.covered_official ? 'Inside a window and to a covered official; no reason recorded, so shown as a pattern only' : r.inside_window ? 'Inside a window, but the committee’s official does not approve this contract' : 'Outside every window', sub: `${fmt.date(r.date)} · ${fmt.int(r.count)} individuals, aggregated · contract ${r.nearest_contract || '–'}${contractOf.get(r.nearest_contract) ? ' approved ' + fmt.date(contractOf.get(r.nearest_contract).approval_date) : ''}` })), window: [-183, 365], windowLabel: '§1.126 window (approx.)', min: -1830, max: 1830, xTitle: 'Days from contract approval', zeroLabel: 'approval', height: 260, aria: 'Ban window dot strip' });
       }, note: 'Dot size is amount. The window is drawn at its typical position; each record is judged against its own contract’s exact window and the rule in force on that date.' });
-      ctx.card({ title: 'Observed vs expected by chance', sub: 'If timing were unrelated to contracts, this share of contributions would still fall inside a window', span: 12, render(el) {
-        if (!recs.length) return ctx.empty(el, 'No records match');
-        return C.bars(el, { rows: [{ label: 'Expected by chance', value: exp, color: 'var(--neutral-2)', sub: `Computed for the ${fmt.int(recs.length)} records in view, ${fmt.date(lo)} to ${fmt.date(hi)}. ${ban.base_rates.expected_note || ''}` }, { label: 'Observed: inside any window', value: inside.length / recs.length, n: inside.length, color: 'var(--series-2)' }, { label: 'Observed: inside and covered official', value: covered.length / recs.length, n: covered.length, color: 'var(--div-neg-2)' }], format: (v) => fmt.pct(v), valueHead: 'Share of records', nHead: 'records', labelWidth: 220, maxX: 1, aria: 'Observed vs expected' });
-      }, note: `Expected share is recomputed for your filters from each contractor’s windows. The exporter’s figure for all records is ${fmt.pct(expAll)}.`, caveat: 'Active contractors are inside some window much of the time, so a high inside share is expected; only the gap between observed and expected, and the covered-official rows, carry information.' });
+      ctx.card({ title: 'Observed vs expected by chance', sub: mb ? `Matched benchmark: ${fmt.int(mb.n)} contributions${mb.period ? ', ' + mb.period : ''}, to recipients covered for the approval` : 'Matched benchmark', span: 12, render(el) {
+        if (!mb) return ctx.empty(el, 'Matched benchmark not in this export', 'The pooled chance figure in the data contract counts every window a contractor has and overstates chance, so the site does not show it.');
+        return C.bars(el, { rows: [{ label: 'Expected by chance (matched)', value: mb.expected, color: 'var(--neutral-2)', sub: mb.note || '' }, { label: 'Observed (matched)', value: mb.observed, n: mb.n, color: 'var(--series-2)', sub: mb.ci ? `Observed minus expected: ${pts(mb.observed - mb.expected)} (95% interval ${pts(mb.ci[0])} to ${pts(mb.ci[1])})` : '' }], format: (v) => fmt.pct(v, 1), valueHead: 'Share inside a window', nHead: 'contributions', labelWidth: 220, maxX: 0.5, aria: 'Observed vs expected by chance' });
+      }, note: `The benchmark is computed by the data team for the whole period and does not change with your filters. For the ${fmt.int(recs.length)} records in view, ${fmt.pct(recs.length ? inside.length / recs.length : null)} fall inside any post-approval window and ${fmt.pct(recs.length ? covered.length / recs.length : null)} inside a window and to a covered official; those shares include recipients the ban does not reach, so compare them with the dot strip, not with the benchmark.`, caveat: 'A simpler benchmark that pools every window a contractor has, including approvals by offices that do not cover the recipient, reads much higher and overstates chance; the site does not use it. Only the gap between the matched observed and expected shares, and the covered-official rows, carry information.' });
       ctx.card({ title: ctx.ruleOf('ban') ? 'Records that appear to warrant review' : 'Records inside a window to a covered official', sub: 'Each with the reason and the rule; committees belong to officials who approve the contract', span: 12, render(el) {
         if (!covered.length) return ctx.empty(el, 'None under these filters');
-        return C.dataTable(el, { rows: covered, search: false, pageSize: 10, sort: 'date', dir: 'desc', cols: [{ key: 'date', label: 'Date', format: (v) => fmt.date(v) }, { key: 'contractor', label: 'Contractor (affiliated individuals)', text: (r) => sc.name(r.contractor), render: (td, r) => { td.appendChild(sc.link(r.contractor)); ctx.h('span', 'sub', td, ` ${fmt.int(r.count)} individuals, aggregated`).style.color = 'var(--text-muted)'; } }, { key: 'committee', label: 'Committee', text: (r) => sc.name(r.committee), render: (td, r) => td.appendChild(sc.link((sc.ents.get(r.committee) || {}).official || r.committee)) }, { key: 'amount', label: 'Amount', num: true, format: (v) => fmt.money(v) }, { key: 'days_from_approval', label: 'Days from approval', num: true, format: (v) => (v > 0 ? '+' : '') + v }, { key: 'review', label: 'Status, rule and reason', text: (r) => (isReview(r) ? 'appears to warrant review' : 'pattern'), render: (td, r) => td.appendChild(ctx.review('ban', isReview(r) ? r.why : null, 'inside window, covered official; no reason recorded')) }] });
+        return C.dataTable(el, { rows: covered, search: false, pageSize: 10, sort: 'date', dir: 'desc', cols: [{ key: 'date', label: 'Date', format: (v) => fmt.date(v) }, { key: 'contractor', label: 'Contractor (principals who gave)', text: (r) => sc.name(r.contractor), render: (td, r) => { td.appendChild(sc.link(r.contractor)); ctx.h('span', 'sub', td, ` ${fmt.int(r.count)} ${r.count === 1 ? 'person' : 'people'}, not named`).style.color = 'var(--text-muted)'; } }, { key: 'committee', label: 'Committee', text: (r) => sc.name(r.committee), render: (td, r) => td.appendChild(sc.link((sc.ents.get(r.committee) || {}).official || r.committee)) }, { key: 'amount', label: 'Amount', num: true, format: (v) => fmt.money(v) }, { key: 'days_from_approval', label: 'Days from approval', num: true, format: (v) => (v > 0 ? '+' : '') + v }, { key: 'review', label: 'Status, rule and reason', text: (r) => (isReview(r) ? 'appears to warrant review' : 'pattern'), render: (td, r) => td.appendChild(ctx.review('ban', isReview(r) ? r.why : null, 'inside window, covered official; no reason recorded')) }] });
       } });
     },
   };
 
+  /** A behested row can be judged on timeliness only if it has a payment date: Form 803 rows carry a reporting period instead. */
+  const hasPayDate = (b) => b.filed_within_30_days != null && !/803/.test(String(b.form || ''));
+
   // ---------------------------------------------------------------- behested
   M.views['nw-behested'] = {
     id: 'nw-behested', dash: 'nw', nav: 'Behested payments', title: 'Behested payments', what: 'Payments made to third parties at the request of a city official.',
-    how: 'Officials disclose these on SFEC-3.610(b). Payors are shown by type; a payor is flagged “interested party” when it had a contract, permit or lobbying matter before the official’s department within 12 months, which is a check, not a finding. Officials are named because they act in their public role.',
+    how: 'State law requires elected officers to report, on FPPC Form 803 within 30 days, payments made at their behest once one source gives $5,000 or more in a calendar year. San Francisco’s own report (Form SFEC-3610(b), for payments of $1,000 or more from interested parties) was repealed on January 24, 2022 (Ord. 232-21), when the §3.620 ban on soliciting behested payments from interested parties took its place. This view holds Form 803 filings from 2015 to March 2018 and SFEC-3610(b) filings from 2019 on. Payors are shown by type; a payor is flagged “interested party” when it had a contract, permit or lobbying matter before the official’s department within 12 months, which is a check, not a finding. “Late” counts only payments with a payment date that were reported more than 30 days after it; Form 803 rows give a reporting period, not a payment date, so they are left out of that count. Officials are named because they act in their public role.',
     filters: ['years', 'etype', 'amt'], absent: { flow: 'this view is behested payments only' }, files: Object.assign({ beh: 'network/analyses/behested.json' }, FILES),
     render(ctx) {
       const sc = scope(ctx, { ignoreFlow: true }), flowIds = new Set(sc.flows.map((f) => f.id));
       const rows = ctx.data.beh.rows.filter((b) => flowIds.has(b.flow)); ctx.feed('behested payments', rows.length, ctx.data.beh.rows.length);
       const total = st_.sum(rows, 'amount'), interested = st_.sum(rows.filter((b) => b.payor_interested_party), 'amount');
-      Object.assign(ctx.slots, { __small: rows.length < ctx.meta.small_n, payments: rows.length, payments_fmt: fmt.int(rows.length), total: fmt.money(total), officials_fmt: fmt.int(new Set(rows.map((b) => b.official)).size), interested_share: fmt.pct(total ? interested / total : null), late_fmt: fmt.int(rows.filter((b) => !b.filed_within_30_days).length) });
+      // Timeliness needs a payment date. Form 803 data carry a reporting period, not a payment date (the exporter's
+      // notes), and some rows have no comparison at all; neither kind is counted as late.
+      const dated = rows.filter(hasPayDate), late = dated.filter((b) => b.filed_within_30_days === false), undated = rows.length - dated.length;
+      Object.assign(ctx.slots, { __small: rows.length < ctx.meta.small_n, payments: rows.length, payments_fmt: fmt.int(rows.length), total: fmt.money(total), officials_fmt: fmt.int(new Set(rows.map((b) => b.official)).size), interested_share: fmt.pct(total ? interested / total : null), late_fmt: fmt.int(late.length), dated_fmt: fmt.int(dated.length), undated_fmt: fmt.int(undated) });
       ctx.live('beh'); ctx.rule('behested'); fairnessBox(ctx);
       const years = ctx.yearList(), ptypes = ['contractor', 'nonprofit', 'donor_org', 'individuals'];
       ctx.card({ title: 'Behested payments by year and payor type', sub: 'Dollars', span: 7, render(el) {
@@ -175,8 +183,8 @@
       } });
       ctx.card({ title: 'Payments', sub: 'Payor, payee, official, purpose; interested-party flag is a check, not a finding', span: 12, render(el) {
         if (!rows.length) return ctx.empty(el, 'No behested payments match');
-        return C.dataTable(el, { rows, pageSize: 15, sort: 'amount', placeholder: 'Filter…', cols: [{ key: 'date', label: 'Date', format: (v) => fmt.date(v) }, { key: 'official', label: 'At the behest of', text: (b) => sc.name(b.official), render: (td, b) => td.appendChild(sc.link(b.official)) }, { key: 'payor', label: 'Payor', text: (b) => sc.name(b.payor), render: (td, b) => { td.appendChild(sc.typeOf(b.payor) === 'individuals' ? document.createTextNode(sc.name(b.payor)) : sc.link(b.payor)); if (b.payor_interested_party) { td.appendChild(document.createTextNode(' ')); td.appendChild(ctx.tag('pattern', 'interested party')); } } }, { key: 'payee', label: 'Payee', text: (b) => sc.name(b.payee), render: (td, b) => td.appendChild(sc.link(b.payee)) }, { key: 'purpose', label: 'Purpose' }, { key: 'amount', label: 'Amount', num: true, format: (v) => fmt.money(v) }, { key: 'filed_within_30_days', label: 'Filed on time', text: (b) => (b.filed_within_30_days == null ? '–' : b.filed_within_30_days ? 'yes' : 'late') }] });
-      } });
+        return C.dataTable(el, { rows, pageSize: 15, sort: 'amount', placeholder: 'Filter…', cols: [{ key: 'date', label: 'Date', format: (v) => fmt.date(v) }, { key: 'official', label: 'At the behest of', text: (b) => sc.name(b.official), render: (td, b) => td.appendChild(sc.link(b.official)) }, { key: 'payor', label: 'Payor', text: (b) => sc.name(b.payor), render: (td, b) => { td.appendChild(sc.typeOf(b.payor) === 'individuals' ? document.createTextNode(sc.name(b.payor)) : sc.link(b.payor)); if (b.payor_interested_party) { td.appendChild(document.createTextNode(' ')); td.appendChild(ctx.tag('pattern', 'interested party')); } } }, { key: 'payee', label: 'Payee', text: (b) => sc.name(b.payee), render: (td, b) => td.appendChild(sc.link(b.payee)) }, { key: 'purpose', label: 'Purpose' }, { key: 'amount', label: 'Amount', num: true, format: (v) => fmt.money(v) }, { key: 'filed_within_30_days', label: 'Filed within 30 days', text: (b) => (!hasPayDate(b) ? 'no payment date' : b.filed_within_30_days ? 'yes' : 'late') }] });
+      }, note: `“Late” means reported more than 30 days after the payment date: ${fmt.int(late.length)} of the ${fmt.int(dated.length)} payments with a payment date. ${fmt.int(undated)} payment${undated === 1 ? '' : 's'} (Form 803 rows, which give a reporting period rather than a payment date, and any row without a filing date) are not counted as late or on time. The 30-day comparison is a rough proxy for the legal deadline.` });
     },
   };
 
@@ -283,5 +291,5 @@
       } });
     },
   };
-  M.nw = { scope, TYPE_COLOR, FLOW_COLOR, isReview, coverage, expectedShare };
+  M.nw = { scope, TYPE_COLOR, FLOW_COLOR, isReview, coverage, matchedBase };
 })();

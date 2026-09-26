@@ -167,7 +167,10 @@ SPEC = {
         },
         "analyses/ban_window.json": {
             "keys": {"base_rates": "dict"},
-            "nested": {"base_rates": {"expected_share_if_unrelated": "num?"}},
+            # expected_share_if_unrelated (the contract's pooled definition) overstates chance; the site shows only the
+            # matched pair (expected_share_matched / observed_share_matched) and says so when it is absent.
+            "nested": {"base_rates": {"expected_share_if_unrelated": "~num?", "expected_share_matched": "~num?", "observed_share_matched": "~num?",
+                                      "matched_n_records": "~int?", "matched_difference_95ci": "~list?", "matched_note": "~str?"}},
             "arrays": {"contracts": {"contract": "str", "contractor": "str", "approval_date": "date", "window": "list"},
                        "records": {"flow": "str", "contractor": "str", "committee": "str", "date": "date", "amount": "num?", "days_from_approval": "num",
                                    "inside_window": "bool", "covered_official": "bool", "review": "str", "why": "~str?"}},
@@ -189,6 +192,15 @@ SPEC = {
             "keys": {"note": "str"},
             "arrays": {"rows": {"entity": "str", "org": "~str?", "city_paid": "num?", "depts_funding": "list", "depts_lobbied": "list"}},
         },
+    },
+}
+
+# Per-entity files outside the contract's file list: one logical file per id, all optional. Only `bundle_keep`
+# keys are bundled (the rest stays in the export). `commentary` is linted like view commentary.
+EACH = {
+    "performance": {
+        "scorecards/*.json": {"keys": {"dept": "str", "name": "~str?", "commentary": "~dict?", "reorganizations": "~list?"},
+                              "bundle_keep": ["dept", "name", "as_of", "sources", "reorganizations", "commentary"]},
     },
 }
 

@@ -207,7 +207,7 @@
 
   // ---------------------------------------------------------------- integrity
   M.views['pf-integrity'] = {
-    id: 'pf-integrity', dash: 'pf', nav: 'Dropped measures, lowered targets', title: 'Dropped measures and lowered targets', what: 'Measures that disappeared and targets that became easier, especially right after a miss.',
+    id: 'pf-integrity', dash: 'pf', nav: 'Dropped measures, lowered targets', title: 'Dropped measures and lowered targets', what: 'Measures that disappeared and targets that became easier, including right after a miss.',
     how: 'A measure is “dropped” when it stops being reported without a stated replacement. A target is “made easier” when it moves in the direction that makes it easier to meet. Neither is misconduct; both change what the met share means.',
     filters: ['years', 'group', 'dept'], absent: { real: 'no dollar amounts on this view' }, files: { measures: 'performance/measures/measures.json', values: 'performance/measures/values.json' },
     render(ctx) {
@@ -222,8 +222,8 @@
       ctx.live('int');
       ctx.card({ title: 'Dropped measures and easier targets by year', sub: 'Counts across selected departments', span: 7, render(el) {
         if (!ms.ms.length) return ctx.empty(el, 'No measures match');
-        return C.stackedBars(el, { categories: years, catFormat: (y) => `FY${String(y).slice(2)}`, series: [{ id: 'dropped', label: 'Measures dropped', color: 'var(--series-2)', values: years.map((y) => dropped.filter((m) => m.dropped_fy === y).length) }, { id: 'lowered', label: 'Targets made easier', color: 'var(--series-1)', values: years.map((y) => lowered.filter((v) => v.fy === y).length) }, { id: 'lam', label: '…the year after a miss', color: 'var(--ord-5)', values: years.map((y) => loweredAfterMiss.filter((v) => v.fy === y).length) }], format: (v) => fmt.int(v), yTitle: 'Count', aria: 'Integrity by year' });
-      }, note: '“The year after a miss” is a subset of “made easier”, shown separately because it is the clearest sign of target-chasing.' });
+        return C.stackedBars(el, { categories: years, catFormat: (y) => `FY${String(y).slice(2)}`, series: [{ id: 'dropped', label: 'Measures dropped', color: 'var(--series-2)', values: years.map((y) => dropped.filter((m) => m.dropped_fy === y).length) }, { id: 'lowered', label: 'Targets made easier, other years', color: 'var(--series-1)', values: years.map((y) => lowered.filter((v) => v.fy === y && !prevMissed(v)).length) }, { id: 'lam', label: 'Targets made easier the year after a miss', color: 'var(--ord-5)', values: years.map((y) => loweredAfterMiss.filter((v) => v.fy === y).length) }], format: (v) => fmt.int(v), yTitle: 'Count', aria: 'Integrity by year' });
+      }, note: 'The two easier-target segments add up to all targets made easier. Easing after a miss is not by itself a sign of target-chasing: departments also raise targets after a hit about as often as they ease them after a miss (see the Finding), so the pattern mostly reflects targets that track results.' });
       ctx.card({ title: 'By department', sub: 'Easier targets as a share of target changes; click to open', span: 5, render(el) {
         const rows = sc.depts.map((d) => { const vs = ms.vals.filter((v) => ms.byId.get(v.measure).dept === d.id && v.fy > sc.y0); const ch = vs.filter((v) => v.target_change !== 'same'); return { label: d.name, value: ch.length ? ch.filter((v) => v.target_change === 'easier').length / ch.length : null, n: ch.length, small: ch.length < ctx.meta.small_n, sub: `${dropped.filter((m) => m.dept === d.id).length} dropped`, onClick: () => M.state.set({ view: 'dept', id: d.id }) }; }).filter((r) => r.n).sort((a, b) => (b.value || 0) - (a.value || 0));
         if (!rows.length) return ctx.empty(el, 'No measures match');

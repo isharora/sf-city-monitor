@@ -20,6 +20,14 @@
   /** Where a network entity id leads: officials → official page, departments → scorecard, nonprofits → their org profile. */
   const entPatch = (e) => (e.type === 'official' ? { view: 'official', id: e.id } : e.type === 'department' && e.code ? { view: 'dept', id: e.code } : e.type === 'committee' && e.official ? { view: 'official', id: e.official } : { view: 'org', id: e.nonprofit_org || e.id });
   const isReview = (r) => M.nw.isReview(r);
+  /** How to describe a network "official" entity: the export's category separates office holders from candidates. */
+  const roleOf = (off) => {
+    const c = off.category || (Array.isArray(off.term) ? 'elected_or_appointed' : /^candidate\b/i.test(off.office || '') ? 'candidate' : null);
+    if (c === 'candidate') return { id: 'candidate', noun: 'candidate', kicker: 'Candidate profile (public role)', phrase: 'a candidate for City office acting in a public role as a candidate; the data show no evidence that they held City elective office' };
+    if (c === 'appointed_exec') return { id: c, noun: 'official', kicker: 'Official profile (public role)', phrase: 'an appointed City official acting in a public role' };
+    if (c === 'referenced') return { id: c, noun: 'person', kicker: 'Profile (public role)', phrase: 'a person named in public filings as an official or candidate, acting in that public role; the data do not confirm which office they held or sought' };
+    return { id: 'elected_or_appointed', noun: 'official', kicker: 'Official profile (public role)', phrase: 'an elected or appointed official acting in a public role' };
+  };
   const banColor = (r) => (r.inside_window && r.covered_official ? 'var(--div-neg-2)' : r.inside_window ? 'var(--series-2)' : 'var(--neutral-2)');
   const banTag = (ctx, r, who) => { const rule = ctx.ruleOf('ban'); if (isReview(r) && rule) return `Appears to warrant review (${rule.cite}). Pattern worth checking, not proof.`; if (r.inside_window && r.covered_official) return 'Inside a window and to a covered official; no reason recorded, so shown as a pattern only.'; return r.inside_window ? `Inside a window; ${who} does not approve that contract` : 'Outside every window'; };
 
@@ -106,23 +114,43 @@
         if (!rows.length) return ctx.empty(el, 'No flows');
         return C.bars(el, { rows, valueHead: 'Dollars', nHead: 'flows', labelWidth: 190, aria: 'Flows by type' });
       }, note: 'Lobbying contacts have no amount and show as $0 with a count.' });
-      const affiliated = [...ents.values()].find((e) => e.affiliated_with === ent.id), banRecs = affiliated && ctx.data.ban ? ctx.data.ban.records.filter((r) => r.contractor === ent.id) : [];
+      const affNodes = [...ents.values()].filter((e) => e.affiliated_with === ent.id), affiliated = affNodes.find((e) => /^ind-prin-/.test(e.id)) || affNodes.find((e) => !/^ind-emp-/.test(e.id)) || null, banRecs = affiliated && ctx.data.ban ? ctx.data.ban.records.filter((r) => r.contractor === ent.id) : [];
       ctx.card({ title: 'Connections', sub: 'Counterparties, most recent first', span: 7, render(el) {
         if (!flows.length) return ctx.empty(el, 'No flows');
         return C.dataTable(el, { rows: flows.slice().sort((a, b) => b.date.localeCompare(a.date)), search: false, pageSize: 12, sort: 'date', dir: 'desc', cols: [{ key: 'date', label: 'Date', format: (v) => fmt.date(v) }, { key: 'type', label: 'Flow', text: (f) => flowLabel(f.type) }, { key: 'cp', label: 'Counterparty', text: (f) => (f.from === ent.id ? '→ ' + nm(f.to) : '← ' + nm(f.from)), render: (td, f) => { const other = f.from === ent.id ? f.to : f.from, e = ents.get(other); td.appendChild(document.createTextNode(f.from === ent.id ? '→ ' : '← ')); if (e && e.type !== 'individuals') td.appendChild(ctx.link(e.name, entPatch(e))); else td.appendChild(document.createTextNode(nm(other) + (e && e.count ? ` (${fmt.int(e.count)} individuals, aggregated)` : ''))); if (f.behest_of) { td.appendChild(document.createTextNode(' at the behest of ')); td.appendChild(ctx.link(nm(f.behest_of), { view: 'official', id: f.behest_of })); } if (f.flags && f.flags.in_ban_window && banWhy.get(f.id)) { td.appendChild(document.createTextNode(' ')); td.appendChild(ctx.review('ban', banWhy.get(f.id))); } } }, { key: 'amount', label: 'Amount', num: true, format: (v, f) => (v != null ? fmt.money(v) : f.type === 'lobby_contact' ? `${fmt.int(f.count)} contacts` : 'no amount disclosed') }] });
       } });
-      if (affiliated) ctx.card({ title: 'Contributions by affiliated individuals and the ban window', sub: `${fmt.int(affiliated.count)} individuals, aggregated; ${banRecs.filter(isReview).length} records appear to warrant review`, span: 12, render(el) {
+      if (affiliated || banRecs.length) ctx.card({ title: 'Contributions by disclosed principals and the ban window', sub: `${affiliated ? fmt.int(affiliated.count) + ' principals who gave, aggregated' : fmt.int(banRecs.length) + ' records'}; ${banRecs.filter(isReview).length} records appear to warrant review`, span: 12, render(el) {
         if (!ctx.data.ban) return ctx.empty(el, 'Ban-window analysis not available yet');
         if (!banRecs.length) return ctx.empty(el, 'No contribution records');
         return C.dotStrip(el, { points: banRecs.map((r) => ({ t: r.days_from_approval, amount: r.amount, label: `→ ${nm(r.committee)}`, color: banColor(r), tag: banTag(ctx, r, 'the committee’s official'), sub: fmt.date(r.date) })), window: [-183, 365], windowLabel: '§1.126 window (approx.)', min: -1830, max: 1830, xTitle: 'Days from this contractor’s nearest contract approval', zeroLabel: 'approval', height: 200, aria: 'Ban window strip' });
-      }, caveat: 'Attribution of donors to this contractor rests on self-reported employer fields; the Ethics Commission may already have reviewed these records, and contributions may have been returned. For the base rate, see the ban-window view.' });
+      }, caveat: 'These donors are people name-matched to the principals (board members, officers, owners of more than 10%) listed on this contractor’s SFEC-126(f)4 filings, not people who named it as their employer; a name match can still be wrong. The Ethics Commission may already have reviewed these records, and contributions may have been returned. For the base rate, see the ban-window view.' });
     },
   };
+
+  /** The Budget vs outcomes analyst's read for one department (performance/scorecards/<dept>.json › commentary). */
+  function scorecardRead(ctx, id) {
+    const card = ctx.data.card, cm = card && card.commentary;
+    if (!cm || !(cm.headline || (cm.paragraphs || []).length)) return;
+    section(ctx, 'What the numbers say', 'analyst’s commentary from the Budget vs outcomes dashboard', 'pf');
+    const reorg = (card.reorganizations || []).filter((r) => Array.isArray(r.depts) && r.depts.includes(id));
+    ctx.card({ title: cm.headline || 'Analyst’s read', sub: cm.author || '', span: 12, render(el) {
+      const box = ctx.h('div', 'scorecard-read', el);
+      (cm.paragraphs || []).forEach((p) => ctx.h('p', 'analysis-p', box, p));
+      if (reorg.length) ctx.h('p', 'analysis-p muted', box, 'Reorganizations: ' + reorg.map((r) => `FY${r.fy}: ${r.what}`).join(' '));
+      if ((cm.caveats || []).length) {
+        const ul = ctx.h('ul', 'scorecard-caveats', box);
+        cm.caveats.forEach((c) => { const li = ctx.h('li', 'caveat sev-' + (c.severity || 'medium'), ul); ctx.h('span', 'sev', li, c.severity === 'high' ? 'Could move the finding' : c.severity === 'low' ? 'Minor' : 'Worth knowing'); li.appendChild(document.createTextNode(' ' + c.text)); });
+      }
+      const src = ctx.h('p', 'analysis-sources', box, 'Numbers trace to: '); ctx.h('code', '', src, `performance/data/site/scorecards/${id}.json`); if (card.as_of) src.appendChild(document.createTextNode(` (as of ${card.as_of})`));
+      return null;
+    } });
+  }
 
   // ---------------------------------------------------------------- department scorecard
   M.views.dept = {
     id: 'dept', dash: 'site', title: 'Department scorecard', kicker: 'Department scorecard', filters: [], filterNote: NOTE, headline: false, optional: true,
-    files: { spend: 'performance/spending/cells.json', staff: 'performance/staffing/cells.json', measures: 'performance/measures/measures.json', values: 'performance/measures/values.json', pay: 'nonprofits/payments/cells.json', orgs: 'nonprofits/orgs/index.json', recs: 'audits/recs/recs.json', reports: 'audits/reports/reports.json', ents: 'network/entities.json', flows: 'network/flows.json' },
+    // The performance module's per-department scorecard (commentary and reorganizations) is loaded when it exists.
+    files: (st) => Object.assign({ spend: 'performance/spending/cells.json', staff: 'performance/staffing/cells.json', measures: 'performance/measures/measures.json', values: 'performance/measures/values.json', pay: 'nonprofits/payments/cells.json', orgs: 'nonprofits/orgs/index.json', recs: 'audits/recs/recs.json', reports: 'audits/reports/reports.json', ents: 'network/entities.json', flows: 'network/flows.json' }, st.id && M.data.entry(`performance/scorecards/${st.id}.json`) ? { card: `performance/scorecards/${st.id}.json` } : {}),
     render(ctx) {
       const id = ctx.state.id, d = (ctx.site.departments || []).find((x) => x.id === id);
       if (!d) { ctx.empty(ctx.h('div', 'col-12 card', ctx.grid), 'Unknown department', `No department with id ${id || '(none)'}. Department ids are Controller codes such as DPH or POL.`); return; }
@@ -135,6 +163,7 @@
       if (ctx.data.spend) ctx.feed('spending records', spend.length, ctx.data.spend.cells.length); if (ctx.data.staff) ctx.feed('staffing records', staff.length, null);
       const group = pfm && pfm.dimensions.group ? (pfm.dimensions.group.values.find((g) => g.id === d.group) || {}).label : null;
       header(ctx, { facts: [['Group', group], [`Actual FY${y1 || '–'}`, spend.length ? fmt.money(a1) : null], ['vs original budget', b1 ? fmt.signedPct(a1 / b1 - 1, 1) : null], ['Employees', fmt.int(s1.headcount)], ['Overtime share', fmt.pct(s1.ot_share, 1)]], links: [ctx.sampleTag('pf'), ctx.link('Budget vs outcomes, this department →', { view: 'pf-spending', dept: [id] }), ctx.link('Audit tracker, this department →', { view: 'au-status', dept: [id] }), ctx.link('Nonprofit money, this department →', { view: 'np-flows', dept: [id] })] });
+      scorecardRead(ctx, id);
       section(ctx, 'Spending and staffing', '', 'pf');
       if (ctx.need(['spend'], 'Spending')) ctx.card({ title: 'Actual spending, real and nominal', sub: pfm ? `Real = FY${pfm.deflator.base_fy} dollars` : '', span: 6, render(el) {
         if (!years.length) return ctx.empty(el, 'No spending records for this department');
@@ -229,33 +258,35 @@
       if (!off || off.type !== 'official') { ctx.empty(ctx.h('div', 'col-12 card', ctx.grid), 'Unknown official', `No official with id ${ctx.state.id || '(none)'}. Officials appear only in their public roles.`); return; }
       document.querySelector('.view-title').textContent = `${off.name}${off.office ? ' · ' + off.office : ''}`; document.title = `${off.name} · SF City Monitor`;
       const nwm = ctx.metas.nw, nm = (x) => (ents.get(x) || { name: x }).name;
+      const role = roleOf(off);
+      const kick = document.querySelector('.view-head .kicker span'); if (kick) kick.textContent = role.kicker;
       const cmtes = [...ents.values()].filter((e) => e.type === 'committee' && e.official === off.id), cids = new Set(cmtes.map((c) => c.id));
       const contribs = ctx.data.flows.flows.filter((f) => f.type === 'contribution' && cids.has(f.to)), beh = ctx.data.beh ? ctx.data.beh.rows.filter((b) => b.official === off.id) : [], contacts = ctx.data.flows.flows.filter((f) => f.type === 'lobby_contact' && f.to === off.id);
-      ctx.feed('contribution records to this official’s committees', contribs.length, null); ctx.feed('behested payments', beh.length, null); ctx.feed('lobbying contact records', contacts.length, null);
-      header(ctx, { facts: [['Office', off.office], ['Term', Array.isArray(off.term) ? off.term.join('–') : null], ['Committees', cmtes.map((c) => c.name).join('; ') || 'none'], ['Contributions received', fmt.money(st_.sum(contribs, 'amount'))], ['Behested payments', fmt.money(st_.sum(beh, 'amount'))], ['Lobbying contacts', fmt.int(st_.sum(contacts, 'count'))]], links: [ctx.sampleTag('nw'), ctx.link('Focus in the network graph →', { view: 'nw-graph', v: { focus: cmtes[0] ? cmtes[0].id : off.id } })] });
-      ctx.fair(`${nwm.fairness.individuals} ${nwm.fairness.timing} This page describes an elected or appointed official acting in a public role; it lists disclosed transactions, not conduct.`);
+      ctx.feed(`contribution records to this ${role.noun}’s committees`, contribs.length, null); ctx.feed('behested payments', beh.length, null); ctx.feed('lobbying contact records', contacts.length, null);
+      header(ctx, { facts: [['Office', off.office], ['Term', Array.isArray(off.term) ? off.term.join('–') : null], ['Office held', role.id === 'candidate' ? 'no evidence of holding City elective office in the data' : null], ['Committees', cmtes.map((c) => c.name).join('; ') || 'none'], ['Contributions received', fmt.money(st_.sum(contribs, 'amount'))], ['Behested payments', fmt.money(st_.sum(beh, 'amount'))], ['Lobbying contacts', fmt.int(st_.sum(contacts, 'count'))]], links: [ctx.sampleTag('nw'), ctx.link('Focus in the network graph →', { view: 'nw-graph', v: { focus: cmtes[0] ? cmtes[0].id : off.id } })] });
+      ctx.fair(`${nwm.fairness.individuals} ${nwm.fairness.timing} This page describes ${role.phrase}; it lists disclosed transactions, not conduct.`);
       section(ctx, 'Contributions to committees', 'individuals aggregated by affiliation', 'nw');
       ctx.card({ title: 'By source type', sub: 'All years', span: 5, render(el) {
-        const K = [['individuals', 'Individuals (aggregate)', 'var(--c-individuals)'], ['contractor_affiliated', 'Contractor-affiliated individuals (aggregate)', 'var(--c-contractor)'], ['donor_org', 'PACs and organizations', 'var(--c-donor_org)'], ['nonprofit', 'Nonprofits', 'var(--c-nonprofit)'], ['contractor', 'Contractors', 'var(--c-contractor)']];
-        const typeOf = (f) => { const e = ents.get(f.from) || {}; return e.type === 'individuals' ? (e.affiliated_with ? 'contractor_affiliated' : 'individuals') : e.type; };
+        const K = [['individuals', 'Individuals (aggregate)', 'var(--c-individuals)'], ['contractor_principals', 'Contractor principals on SFEC-126(f)4 (aggregate)', 'var(--c-contractor)'], ['contractor_employees', 'Individuals naming a contractor as employer (aggregate)', 'var(--c-contractor)'], ['contractor_affiliated', 'Other contractor-affiliated individuals (aggregate)', 'var(--c-contractor)'], ['donor_org', 'PACs and organizations', 'var(--c-donor_org)'], ['nonprofit', 'Nonprofits', 'var(--c-nonprofit)'], ['contractor', 'Contractors', 'var(--c-contractor)']];
+        const typeOf = (f) => { const e = ents.get(f.from) || {}; return e.type === 'individuals' ? (!e.affiliated_with ? 'individuals' : /^ind-prin-/.test(e.id) ? 'contractor_principals' : /^ind-emp-/.test(e.id) ? 'contractor_employees' : 'contractor_affiliated') : e.type; };
         const rows = K.map(([k, label, color]) => ({ label, value: st_.sum(contribs.filter((f) => typeOf(f) === k), 'amount'), n: contribs.filter((f) => typeOf(f) === k).reduce((a, f) => a + (f.count || 1), 0), color })).filter((r) => r.n);
         if (!rows.length) return ctx.empty(el, 'No contributions');
         return C.bars(el, { rows, valueHead: 'Dollars', nHead: 'contributions', labelWidth: 230, aria: 'Contributions by source type' });
       } });
       const banRecs = ctx.data.ban ? ctx.data.ban.records.filter((r) => cids.has(r.committee)) : [];
-      ctx.card({ title: 'Contractor-affiliated contributions and the ban window', sub: `${banRecs.length} records; ${banRecs.filter(isReview).length} appear to warrant review`, span: 7, render(el) {
+      ctx.card({ title: 'Contributions by contractor principals and the ban window', sub: `${banRecs.length} records; ${banRecs.filter(isReview).length} appear to warrant review`, span: 7, render(el) {
         if (!ctx.data.ban) return ctx.empty(el, 'Ban-window analysis not available yet');
         if (!banRecs.length) return ctx.empty(el, 'No contractor-affiliated contributions');
-        return C.dotStrip(el, { points: banRecs.map((r) => ({ t: r.days_from_approval, amount: r.amount, label: `${nm(r.contractor)} (affiliated individuals)`, color: banColor(r), tag: banTag(ctx, r, 'this official'), sub: fmt.date(r.date) })), window: [-183, 365], windowLabel: '§1.126 window (approx.)', min: -1830, max: 1830, xTitle: 'Days from the contractor’s nearest contract approval', zeroLabel: 'approval', height: 200, aria: 'Ban strip' });
-      }, caveat: 'The expected-by-chance share for all contractors is on the ban-window view; this official’s records are too few for a base rate of their own.' });
+        return C.dotStrip(el, { points: banRecs.map((r) => ({ t: r.days_from_approval, amount: r.amount, label: `${nm(r.contractor)} (affiliated individuals)`, color: banColor(r), tag: banTag(ctx, r, role.id === 'candidate' ? 'the office this candidate sought' : 'this official'), sub: fmt.date(r.date) })), window: [-183, 365], windowLabel: '§1.126 window (approx.)', min: -1830, max: 1830, xTitle: 'Days from the contractor’s nearest contract approval', zeroLabel: 'approval', height: 200, aria: 'Ban strip' });
+      }, caveat: `These records are contributions by people name-matched to principals (board members, officers, owners of more than 10%) listed on the contractor’s SFEC-126(f)4 filings, not by employer; a name match can still be wrong. The expected-by-chance share for all contractors is on the ban-window view; the records for this ${role.id === 'candidate' ? 'candidate' : 'official'} are too few for a base rate of their own.` });
       section(ctx, 'Behested payments', `${beh.length} payments, ${fmt.money(st_.sum(beh, 'amount'))}`, 'nw');
-      ctx.card({ title: 'Payments at this official’s behest', sub: 'Payor, payee and purpose; the interested-party flag is a check, not a finding', span: 12, render(el) {
+      ctx.card({ title: `Payments at this ${role.noun}’s behest`, sub: 'Payor, payee and purpose; the interested-party flag is a check, not a finding', span: 12, render(el) {
         if (!ctx.data.beh) return ctx.empty(el, 'Behested-payment analysis not available yet');
         if (!beh.length) return ctx.empty(el, 'None disclosed');
         return C.dataTable(el, { rows: beh, search: false, pageSize: 10, sort: 'amount', cols: [{ key: 'date', label: 'Date', format: (v) => fmt.date(v) }, { key: 'payor', label: 'Payor', text: (b) => nm(b.payor), render: (td, b) => { const e = ents.get(b.payor); if (e && e.type !== 'individuals') td.appendChild(ctx.link(e.name, entPatch(e))); else td.textContent = nm(b.payor); if (b.payor_interested_party) { td.appendChild(document.createTextNode(' ')); td.appendChild(ctx.tag('pattern', 'interested party')); } } }, { key: 'payee', label: 'Payee', text: (b) => nm(b.payee), render: (td, b) => { const e = ents.get(b.payee); if (e && e.type !== 'individuals') td.appendChild(ctx.link(e.name, entPatch(e))); else td.textContent = nm(b.payee); } }, { key: 'purpose', label: 'Purpose' }, { key: 'amount', label: 'Amount', num: true, format: (v) => fmt.money(v) }] });
       } });
-      section(ctx, 'Lobbying contacts with this official', `${fmt.int(st_.sum(contacts, 'count'))} contacts`, 'nw');
-      ctx.card({ title: 'Contacts by client', sub: 'Who paid lobbyists to contact this official', span: 6, render(el) {
+      section(ctx, `Lobbying contacts with this ${role.noun}`, `${fmt.int(st_.sum(contacts, 'count'))} contacts`, 'nw');
+      ctx.card({ title: 'Contacts by client', sub: `Who paid lobbyists to contact this ${role.noun}`, span: 6, render(el) {
         const by = st_.group(contacts, (f) => f.client), rows = [...by.entries()].map(([c, fs]) => { const e = ents.get(c); return { label: nm(c), value: st_.sum(fs, 'count'), color: M.nw.TYPE_COLOR((e || {}).type), sub: [...new Set(fs.map((f) => f.topic).filter(Boolean))].join(', '), onClick: e ? () => M.state.set(entPatch(e)) : null }; }).sort((a, b) => b.value - a.value).slice(0, 10);
         if (!rows.length) return ctx.empty(el, 'None reported');
         return C.bars(el, { rows, rowH: 26, format: (v) => fmt.int(v), valueHead: 'Contacts', labelWidth: 200, aria: 'Contacts by client' });

@@ -429,6 +429,40 @@ ROW_RULES = {"review_cites_report": rr_review_cites_report, "months_iff_implemen
              "rules_cited": rr_rules_cited, "no_addresses": rr_no_addresses, "review_has_reason": rr_review_has_reason}
 
 
+def _load_overrides():
+    p = os.path.join(CONTENT, "overrides.json")
+    if not os.path.isfile(p):
+        return {}
+    with open(p, encoding="utf-8") as fh:
+        return {k: v for k, v in json.load(fh).items() if not k.startswith("_")}
+
+
+def apply_overrides(logical, obj):
+    """Exact-text replacements from content/overrides.json in every string of obj (in place). Returns (applied, stale finds)."""
+    rules = _load_overrides().get(logical) or []
+    applied, stale = 0, []
+    for r in rules:
+        hits = [0]
+
+        def walk(o):
+            if isinstance(o, dict):
+                for k, v in o.items():
+                    o[k] = walk(v)
+            elif isinstance(o, list):
+                for i, v in enumerate(o):
+                    o[i] = walk(v)
+            elif isinstance(o, str) and r["find"] in o:
+                hits[0] += 1
+                return o.replace(r["find"], r["replace"])
+            return o
+        walk(obj)
+        if hits[0]:
+            applied += hits[0]
+        else:
+            stale.append(r["find"])
+    return applied, stale
+
+
 def validate_commentary(view, obj, real):
     rep = Report()
     if not isinstance(obj, dict):
@@ -733,11 +767,52 @@ def bundle_module(module, report_lines, quiet):
                     entry["status"] = "ok"
                     if decision == "sample" and isinstance(obj, dict):
                         obj.setdefault("sample", True)
+                    if decision == "real":
+                        applied, stale = apply_overrides(logical, obj)
+                        if applied:
+                            entry["repaired"] = True  # the loader must use the corrected chunk, not the raw export
+                            entry["notes"] = [f"site override applied ({applied}x, content/overrides.json)"]
+                        entry["warnings"] += [f"site override no longer matches (module may have fixed it; remove it from content/overrides.json): {x[:70]}…" for x in stale]
                     entry["chunks"], _, entry["chunk_bytes"] = write_chunks(logical, obj)
             except ValueError as e:
                 entry.update(status="invalid", errors=[f"not valid JSON: {e}"])
         mod["commentary"][logical] = entry
+    # per-entity files (EACH): one optional logical file per id, e.g. performance/scorecards/POL.json
+    for pattern, spec in C.EACH.get(module, {}).items():
+        if decision != "real":
+            continue
+        for p in sorted(glob.glob(os.path.join(root, pattern))):
+            rel = os.path.relpath(p, root)
+            logical = f"{module}/{rel}"
+            entry = {"status": "missing", "bytes": 0, "raw": [rel_to_site(p)], "sample": False, "optional": True, "each": pattern,
+                     "errors": [], "warnings": [], "notes": [], "rows": 0}
+            try:
+                obj, n = read_json(p)
+                rep = Report()
+                if not isinstance(obj, dict):
+                    rep.err("not a JSON object")
+                else:
+                    check_fields(obj, spec["keys"], rel, rep)
+                    if isinstance(obj.get("commentary"), dict):
+                        crep = validate_commentary("scorecard", obj["commentary"], True)
+                        rep.errors += ["commentary: " + x for x in crep.errors]
+                        rep.warnings += ["commentary: " + x for x in crep.warnings]
+                entry.update(bytes=n, errors=rep.errors, warnings=rep.warnings)
+                if rep.errors:
+                    entry["status"] = "invalid"
+                else:
+                    entry["status"] = "ok"
+                    slim = {k: obj[k] for k in spec.get("bundle_keep", obj.keys()) if k in obj}
+                    entry["chunks"], _, entry["chunk_bytes"] = write_chunks(logical, slim)
+            except ValueError as e:
+                entry.update(status="invalid", errors=[f"not valid JSON: {e}"])
+            mod["files"][logical] = entry
     meta = loaded.get("meta.json") or {}
+    # small headline numbers the landing page shows without loading large files
+    mod["_highlights"] = {}
+    br = (loaded.get("analyses/ban_window.json") or {}).get("base_rates") or {}
+    if module == "network" and isinstance(br.get("expected_share_matched"), (int, float)) and isinstance(br.get("observed_share_matched"), (int, float)):
+        mod["_highlights"]["ban_matched"] = {k: br.get(k) for k in ("expected_share_matched", "observed_share_matched", "matched_n_records", "matched_difference_95ci")}
     mod["as_of"] = meta.get("as_of")
     mod["_meta"] = meta
     mod["sample_meta"] = meta.get("sample")
@@ -753,7 +828,22 @@ def bundle_module(module, report_lines, quiet):
         ex = extra_files(module, real_root)
         if ex:
             L.append(f"   not in the contract, not loaded: {len(ex)} files ({', '.join(ex[:5])}{' …' if len(ex) > 5 else ''})")
+    each = {}
+    for logical, e in mod["files"].items():
+        if e.get("each"):
+            each.setdefault(e["each"], []).append((logical, e))
+    for pattern, items in each.items():
+        ok = sum(1 for _, e in items if e["status"] == "ok")
+        L.append(f"   {'OK     ' if ok == len(items) else 'INVALID'} {module + '/' + pattern:<48} {len(items)} files, {ok} valid, {sum(e['bytes'] for _, e in items)/1e3:.0f} KB → {sum(e.get('chunk_bytes') or 0 for _, e in items)/1e3:.0f} KB bundled")
+        for logical, e in items:
+            for x in e["errors"][:3]:
+                L.append(f"            error: {logical}: {x}")
+            if not quiet:
+                for x in e["warnings"][:2]:
+                    L.append(f"            warn:  {logical}: {x}")
     for logical, e in list(mod["files"].items()) + list(mod["commentary"].items()):
+        if e.get("each"):
+            continue
         if quiet and e["status"] == "ok" and not e["errors"]:
             continue
         flag = {"ok": "OK     ", "invalid": "INVALID", "missing": "MISSING"}[e["status"]]
@@ -812,7 +902,7 @@ def extra_files(module, root):
     for dirpath, _, fs in os.walk(root):
         for f in fs:
             rp = os.path.relpath(os.path.join(dirpath, f), root)
-            if f.endswith(".json") and not any(rp == k or (C.SPEC[module][k].get("split") and fnmatch.fnmatch(rp, C.SPEC[module][k]["split"])) for k in C.SPEC[module]) and not rp.startswith("commentary"):
+            if f.endswith(".json") and not any(rp == k or (C.SPEC[module][k].get("split") and fnmatch.fnmatch(rp, C.SPEC[module][k]["split"])) for k in C.SPEC[module]) and not rp.startswith("commentary") and not any(fnmatch.fnmatch(rp, pat) for pat in C.EACH.get(module, {})):
                 extra.append(rp)
     return sorted(extra)
 
@@ -839,7 +929,7 @@ def build_site_json(mods, loaded_meta):
             depts.append(d)
     groups = ((loaded_meta.get("performance") or {}).get("dimensions") or {}).get("group", {}).get("values") or []
     return {"generated_at": _dt.datetime.now().isoformat(timespec="seconds"), "sample": any(mods[m]["source"] == "sample" for m in mods),
-            "modules": {m: {"as_of": mods[m]["as_of"], "source": mods[m]["source"]} for m in mods}, "departments": depts, "groups": groups}
+            "modules": {m: {"as_of": mods[m]["as_of"], "source": mods[m]["source"], "highlights": mods[m].get("_highlights") or {}} for m in mods}, "departments": depts, "groups": groups}
 
 
 def main(argv):
@@ -854,6 +944,8 @@ def main(argv):
         mods[m] = bundle_module(m, lines, quiet)
         metas[m] = mods[m].pop("_meta")
     site = build_site_json(mods, metas)
+    for m in MODULES:
+        mods[m].pop("_highlights", None)
     site_files = {}
     chunks, _, _cb = write_chunks("site/site.json", site)
     site_files["site/site.json"] = {"status": "ok", "bytes": len(json.dumps(site)), "chunks": chunks, "sample": False, "errors": [], "warnings": [], "raw": []}

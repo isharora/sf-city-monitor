@@ -443,3 +443,7 @@ svg rect.hit:focus-visible { fill: var(--focus); fill-opacity: .08; }
   .topbar { flex-wrap: wrap; }
   .sample-note { display: none; }
 }
+/* department scorecard: the performance module's analyst's read */
+.scorecard-read { max-width: 80ch; }
+.scorecard-read .analysis-p { font-size: 15px; }
+.scorecard-caveats { margin: 10px 0 8px; padding: 0; list-style: none; display: grid; gap: 8px; }
