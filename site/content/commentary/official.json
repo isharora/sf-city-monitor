@@ -16,7 +16,7 @@
   },
   {
    "severity": "medium",
-   "text": "Candidates are labelled as candidates when the data show no evidence that they held City elective office (Board of Supervisors roster, Form 700 and lobbyist contact reports); an appointment the data do not capture would be missed."
+   "text": "Office-holding comes from verified rosters: the Board of Supervisors roster and a sourced table of every citywide officeholder since 2009, including interim and acting appointments. Candidates who never held the office are labeled as candidates."
   }
  ],
  "sources": [

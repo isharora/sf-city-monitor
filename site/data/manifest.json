@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-26T10:36:16",
+ "generated_at": "2026-09-26T10:38:37",
  "tool": "site/tools/bundle.py",
  "chunk_limit": 380000,
  "modules": {
@@ -2385,7 +2385,7 @@
   },
   "site/commentary/official.json": {
    "status": "ok",
-   "bytes": 1201,
+   "bytes": 1216,
    "sample": false,
    "errors": [],
    "warnings": [],
@@ -2395,7 +2395,7 @@
    "chunks": [
     "data/site/commentary/official.0.js"
    ],
-   "chunk_bytes": 1165
+   "chunk_bytes": 1180
   },
   "site/commentary/org.json": {
    "status": "ok",
