@@ -38,12 +38,14 @@
     if (cur) days += cur[1] - cur[0];
     return days / (H - L);
   }
-  /** Expected share of records inside a window if timing were unrelated to contracts: each contractor's window
+  /** Expected share of records inside a window if timing were unrelated to contracts (uses window_post_approval when
+      the exporter supplies it, as its base-rate note specifies): each contractor's window
       coverage of the period, weighted by its number of records (the contract's definition), for any record subset. */
   function expectedShare(records, contracts, lo, hi) {
     const by = new Map(); for (const r of records) by.set(r.contractor, (by.get(r.contractor) || 0) + 1);
+    const byC = new Map(); for (const c of contracts) { if (!byC.has(c.contractor)) byC.set(c.contractor, []); byC.get(c.contractor).push(c); }
     let num = 0, den = 0;
-    for (const [cid, k] of by) { num += coverage(contracts.filter((c) => c.contractor === cid && Array.isArray(c.window)).map((c) => c.window), lo, hi) * k; den += k; }
+    for (const [cid, k] of by) { num += coverage((byC.get(cid) || []).filter((c) => Array.isArray(c.window_post_approval || c.window)).map((c) => c.window_post_approval || c.window), lo, hi) * k; den += k; }
     return den ? num / den : null;
   }
 
@@ -112,7 +114,7 @@
       kv('Flows', fmt.int(mine.length)); kv('Dollars in', fmt.money(st_.sum(mine.filter((f) => f.to === sel), (f) => f.amount || 0))); kv('Dollars out', fmt.money(st_.sum(mine.filter((f) => f.from === sel), (f) => f.amount || 0))); kv('Neighbors', fmt.int(res.neighbors.size - 1));
       ctx.h('h3', '', side, 'Largest flows').style.marginTop = '14px';
       const ul = ctx.h('ul', 'list', side);
-      mine.slice().sort((a, b) => (b.amount || 0) - (a.amount || 0)).slice(0, 10).forEach((f) => { const li = ctx.h('li', '', ul); const l = ctx.h('span', '', li); l.textContent = f.from === sel ? `→ ${sc.name(f.to)}` : `← ${sc.name(f.from)}`; ctx.h('span', 'sub', l, `${sc.flowLabel(f.type)} · ${fmt.date(f.date)}`); if (f.flags && f.flags.in_ban_window && banWhy.get(f.id)) l.appendChild(ctx.review('ban', banWhy.get(f.id))); ctx.h('span', 'tnum', li, f.amount != null ? fmt.money(f.amount) : `${f.count} contacts`); });
+      mine.slice().sort((a, b) => (b.amount || 0) - (a.amount || 0)).slice(0, 10).forEach((f) => { const li = ctx.h('li', '', ul); const l = ctx.h('span', '', li); l.textContent = f.from === sel ? `→ ${sc.name(f.to)}` : `← ${sc.name(f.from)}`; ctx.h('span', 'sub', l, `${sc.flowLabel(f.type)} · ${fmt.date(f.date)}`); if (f.flags && f.flags.in_ban_window && banWhy.get(f.id)) l.appendChild(ctx.review('ban', banWhy.get(f.id))); ctx.h('span', 'tnum', li, f.amount != null ? fmt.money(f.amount) : f.type === 'lobby_contact' ? `${fmt.int(f.count)} contacts` : 'no amount'); });
     },
   };
 
@@ -125,7 +127,7 @@
       const sc = scope(ctx, { ignoreFlow: true }), ban = ctx.data.ban;
       const flowIds = new Set(sc.flows.map((f) => f.id));
       const recs = ban.records.filter((r) => flowIds.has(r.flow));
-      ctx.feed('contractor-affiliated contribution records', recs.length, ban.records.length); ctx.feed('contracts with an SFEC-126(f)4 notice', new Set(recs.map((r) => r.nearest_contract)).size, ban.contracts.length);
+      ctx.feed('contractor-affiliated contribution records', recs.length, ban.records.length); const knownC = new Set(ban.contracts.map((c) => c.contract)); ctx.feed('contracts with an SFEC-126(f)4 notice', new Set(recs.map((r) => r.nearest_contract).filter((c) => knownC.has(c))).size, knownC.size);
       const inside = recs.filter((r) => r.inside_window), covered = recs.filter((r) => r.inside_window && r.covered_official), flagged = covered.filter(isReview);
       // Base rate for exactly the records in view, over the selected years (capped at the data's as-of date).
       const lo = `${sc.y0}-01-01`, hi = [`${sc.y1}-12-31`, ctx.meta.as_of].sort()[0];
@@ -137,13 +139,13 @@
       const contractOf = new Map(ban.contracts.map((c) => [c.contract, c]));
       ctx.card({ title: 'Contributions by days from the nearest contract approval', sub: 'Shaded: the §1.126 window (about 6 months before to 12 months after approval); colour: outside, inside, inside and to a covered official', span: 12, render(el) {
         if (!recs.length) return ctx.empty(el, 'No records match');
-        return C.dotStrip(el, { points: recs.map((r) => ({ t: r.days_from_approval, amount: r.amount, label: `${sc.name(r.contractor)} → ${sc.name(r.committee)}`, color: r.covered_official ? 'var(--div-neg-2)' : r.inside_window ? 'var(--series-2)' : 'var(--neutral-2)', tag: isReview(r) && ctx.ruleOf('ban') ? `Appears to warrant review (${ctx.ruleOf('ban').cite}): inside the window and to a covered official. Pattern worth checking, not proof.` : r.inside_window && r.covered_official ? 'Inside a window and to a covered official; no reason recorded, so shown as a pattern only' : r.inside_window ? 'Inside a window, but the committee’s official does not approve this contract' : 'Outside every window', sub: `${fmt.date(r.date)} · ${fmt.int(r.count)} individuals, aggregated · contract ${r.nearest_contract || '–'}${contractOf.get(r.nearest_contract) ? ' approved ' + fmt.date(contractOf.get(r.nearest_contract).approval_date) : ''}` })), window: [-183, 365], windowLabel: '§1.126 window (approx.)', min: -800, max: 1200, xTitle: 'Days from contract approval', zeroLabel: 'approval', height: 260, aria: 'Ban window dot strip' });
+        return C.dotStrip(el, { points: recs.map((r) => ({ t: r.days_from_approval, amount: r.amount, label: `${sc.name(r.contractor)} → ${sc.name(r.committee)}`, color: r.covered_official ? 'var(--div-neg-2)' : r.inside_window ? 'var(--series-2)' : 'var(--neutral-2)', tag: isReview(r) && ctx.ruleOf('ban') ? `Appears to warrant review (${ctx.ruleOf('ban').cite}): inside the window and to a covered official. Pattern worth checking, not proof.` : r.inside_window && r.covered_official ? 'Inside a window and to a covered official; no reason recorded, so shown as a pattern only' : r.inside_window ? 'Inside a window, but the committee’s official does not approve this contract' : 'Outside every window', sub: `${fmt.date(r.date)} · ${fmt.int(r.count)} individuals, aggregated · contract ${r.nearest_contract || '–'}${contractOf.get(r.nearest_contract) ? ' approved ' + fmt.date(contractOf.get(r.nearest_contract).approval_date) : ''}` })), window: [-183, 365], windowLabel: '§1.126 window (approx.)', min: -1830, max: 1830, xTitle: 'Days from contract approval', zeroLabel: 'approval', height: 260, aria: 'Ban window dot strip' });
       }, note: 'Dot size is amount. The window is drawn at its typical position; each record is judged against its own contract’s exact window and the rule in force on that date.' });
-      ctx.card({ title: 'Observed vs expected by chance', sub: 'If timing were unrelated to contracts, this share of contributions would still fall inside a window', span: 5, render(el) {
+      ctx.card({ title: 'Observed vs expected by chance', sub: 'If timing were unrelated to contracts, this share of contributions would still fall inside a window', span: 12, render(el) {
         if (!recs.length) return ctx.empty(el, 'No records match');
         return C.bars(el, { rows: [{ label: 'Expected by chance', value: exp, color: 'var(--neutral-2)', sub: `Computed for the ${fmt.int(recs.length)} records in view, ${fmt.date(lo)} to ${fmt.date(hi)}. ${ban.base_rates.expected_note || ''}` }, { label: 'Observed: inside any window', value: inside.length / recs.length, n: inside.length, color: 'var(--series-2)' }, { label: 'Observed: inside and covered official', value: covered.length / recs.length, n: covered.length, color: 'var(--div-neg-2)' }], format: (v) => fmt.pct(v), valueHead: 'Share of records', nHead: 'records', labelWidth: 220, maxX: 1, aria: 'Observed vs expected' });
       }, note: `Expected share is recomputed for your filters from each contractor’s windows. The exporter’s figure for all records is ${fmt.pct(expAll)}.`, caveat: 'Active contractors are inside some window much of the time, so a high inside share is expected; only the gap between observed and expected, and the covered-official rows, carry information.' });
-      ctx.card({ title: ctx.ruleOf('ban') ? 'Records that appear to warrant review' : 'Records inside a window to a covered official', sub: 'Each with the reason and the rule; committees belong to officials who approve the contract', span: 7, render(el) {
+      ctx.card({ title: ctx.ruleOf('ban') ? 'Records that appear to warrant review' : 'Records inside a window to a covered official', sub: 'Each with the reason and the rule; committees belong to officials who approve the contract', span: 12, render(el) {
         if (!covered.length) return ctx.empty(el, 'None under these filters');
         return C.dataTable(el, { rows: covered, search: false, pageSize: 10, sort: 'date', dir: 'desc', cols: [{ key: 'date', label: 'Date', format: (v) => fmt.date(v) }, { key: 'contractor', label: 'Contractor (affiliated individuals)', text: (r) => sc.name(r.contractor), render: (td, r) => { td.appendChild(sc.link(r.contractor)); ctx.h('span', 'sub', td, ` ${fmt.int(r.count)} individuals, aggregated`).style.color = 'var(--text-muted)'; } }, { key: 'committee', label: 'Committee', text: (r) => sc.name(r.committee), render: (td, r) => td.appendChild(sc.link((sc.ents.get(r.committee) || {}).official || r.committee)) }, { key: 'amount', label: 'Amount', num: true, format: (v) => fmt.money(v) }, { key: 'days_from_approval', label: 'Days from approval', num: true, format: (v) => (v > 0 ? '+' : '') + v }, { key: 'review', label: 'Status, rule and reason', text: (r) => (isReview(r) ? 'appears to warrant review' : 'pattern'), render: (td, r) => td.appendChild(ctx.review('ban', isReview(r) ? r.why : null, 'inside window, covered official; no reason recorded')) }] });
       } });
@@ -164,7 +166,7 @@
       const years = ctx.yearList(), ptypes = ['contractor', 'nonprofit', 'donor_org', 'individuals'];
       ctx.card({ title: 'Behested payments by year and payor type', sub: 'Dollars', span: 7, render(el) {
         if (!rows.length) return ctx.empty(el, 'No behested payments match');
-        return C.stackedBars(el, { categories: years, series: ptypes.map((t) => ({ id: t, label: sc.typeLabel(t), color: TYPE_COLOR(t), values: years.map((y) => st_.sum(rows.filter((b) => +b.date.slice(0, 4) === y && sc.typeOf(b.payor) === t), 'amount')) })), yTitle: 'Dollars', markers: [{ x: 2022, label: '2022 ordinance restricts solicitation from interested parties' }], annotations: M.commentary.annotationsFor(ctx.commentary, 'nw_behested'), aria: 'Behested by year' });
+        return C.stackedBars(el, { categories: years, series: ptypes.map((t) => ({ id: t, label: sc.typeLabel(t), color: TYPE_COLOR(t), values: years.map((y) => st_.sum(rows.filter((b) => +b.date.slice(0, 4) === y && sc.typeOf(b.payor) === t), 'amount')) })), yTitle: 'Dollars', annotations: M.commentary.annotationsFor(ctx.commentary, 'nw_behested'), aria: 'Behested by year' });
       } });
       ctx.card({ title: 'By official', sub: 'Total at each official’s behest; click to open the profile', span: 5, render(el) {
         const by = st_.group(rows, (b) => b.official), r = [...by.entries()].map(([id, bs]) => ({ label: `${sc.name(id)} (${(sc.ents.get(id) || {}).office || ''})`, value: st_.sum(bs, 'amount'), n: bs.length, color: TYPE_COLOR('official'), sub: `${fmt.pct(st_.sum(bs, 'amount') ? st_.sum(bs.filter((b) => b.payor_interested_party), 'amount') / st_.sum(bs, 'amount') : null)} from payors flagged as interested parties (a check, not a finding)`, onClick: () => M.state.set({ view: 'official', id }) })).sort((a, b) => b.value - a.value).slice(0, 12);
@@ -225,10 +227,10 @@
       const K = [['individuals', 'Individuals (aggregate)', 'var(--c-individuals)'], ['contractor_affiliated', 'Contractor-affiliated individuals (aggregate)', 'var(--c-contractor)'], ['donor_org', 'PACs and other organizations', 'var(--c-donor_org)'], ['nonprofit', 'Nonprofits', 'var(--c-nonprofit)']];
       ctx.card({ title: 'Where each committee’s money came from', sub: 'Share of contribution dollars by source type; sorted by total', span: 12, render(el) {
         const r = rows.slice().sort((a, b) => b.total - a.total).slice(0, 20);
-        return C.stackedBars(el, { horizontal: true, percent: true, categories: r.map((x) => ents.get(x.committee).name), series: K.map(([k, label, color]) => ({ id: k, label, color, values: r.map((x) => x.by_source_type[k] || 0) })), rawFormat: (v) => fmt.money(v), n: r.map((x) => x.n_contributions), nHead: 'contributions', labelWidth: 240, rowH: 24, onClick: (i) => (r[i].official ? M.state.set({ view: 'official', id: r[i].official }) : null), aria: 'Concentration by committee' });
+        return C.stackedBars(el, { horizontal: true, percent: true, categories: r.map((x) => ents.get(x.committee).name + (cycles.length > 1 && x.cycle ? ` (${x.cycle})` : '')), series: K.map(([k, label, color]) => ({ id: k, label, color, values: r.map((x) => x.by_source_type[k] || 0) })), rawFormat: (v) => fmt.money(v), n: r.map((x) => x.n_contributions), nHead: 'contributions', labelWidth: 240, rowH: 24, onClick: (i) => (r[i].official ? M.state.set({ view: 'official', id: r[i].official }) : null), aria: 'Concentration by committee' });
       }, note: 'Click a row to open the official’s profile. Individuals cannot be distinguished from each other here by design.' });
       ctx.card({ title: 'Top-10 named sources’ share', sub: 'Among organizations and PACs only', span: 6, render(el) {
-        const r = rows.filter((x) => x.top10_share_named != null).sort((a, b) => b.top10_share_named - a.top10_share_named).slice(0, 15).map((x) => ({ label: ents.get(x.committee).name, value: x.top10_share_named, n: x.n_named_sources, color: 'var(--c-committee)', onClick: () => M.state.set({ view: 'official', id: x.official }) }));
+        const r = rows.filter((x) => x.top10_share_named != null).sort((a, b) => b.top10_share_named - a.top10_share_named).slice(0, 15).map((x) => ({ label: ents.get(x.committee).name + (cycles.length > 1 && x.cycle ? ` (${x.cycle})` : ''), value: x.top10_share_named, n: x.n_named_sources, color: 'var(--c-committee)', onClick: () => M.state.set({ view: 'official', id: x.official }) }));
         if (!r.length) return ctx.empty(el, 'No committees');
         return C.bars(el, { rows: r, rowH: 26, format: (v) => fmt.pct(v), valueHead: 'Top-10 share', nHead: 'named sources', labelWidth: 240, maxX: 1, aria: 'Top-10 share' });
       }, note: 'With few named sources the top-10 share is trivially high; n tells you how many there were.' });

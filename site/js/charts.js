@@ -382,13 +382,15 @@
 
   /** Dot strip on a relative-time axis: points [{t (days), amount, label, tag, color, sub, onClick}], window:[t0,t1] shaded. */
   function dotStrip(el, o) {
-    const P = o.points.filter((p) => finite(p.t));
-    if (!P.length) { el.innerHTML = ''; h('div', 'empty', el, 'No records to plot'); return { head: [], rows: [] }; }
+    const all = o.points.filter((p) => finite(p.t));
+    // points outside a fixed axis range are left out of the strip (never drawn off-canvas) and counted in a note
+    const P = all.filter((p) => (o.min == null || p.t >= o.min) && (o.max == null || p.t <= o.max));
+    if (!P.length) { el.innerHTML = ''; h('div', 'empty', el, all.length ? `All ${all.length} records fall outside the axis range` : 'No records to plot'); return { head: [], rows: [] }; }
     const f = frame(el, { height: o.height || 200, margin: { top: 30, right: 20, bottom: 40, left: 20 }, aria: o.aria });
     const lo = o.min != null ? o.min : Math.min(...P.map((p) => p.t), o.window ? o.window[0] : 0) - 30, hi = o.max != null ? o.max : Math.max(...P.map((p) => p.t), o.window ? o.window[1] : 0) + 30;
     const x = lin(lo, hi, 0, f.iw);
     if (o.window) { svgEl('rect', { x: x(o.window[0]), y: 0, width: x(o.window[1]) - x(o.window[0]), height: f.ih, class: 'window-band' }, f.g); text(f.g, x(o.window[0]) + 6, 14, o.windowLabel || 'window', 'window-label'); }
-    xGrid(f, x, niceTicks(hi, 8, lo), (t) => (t === 0 ? o.zeroLabel || '0' : `${t > 0 ? '+' : ''}${Math.round(t / 30)} mo`));
+    xGrid(f, x, (hi - lo > 1400 ? [-1825, -1460, -1095, -730, -365, 0, 365, 730, 1095, 1460, 1825].filter((t) => t >= lo && t <= hi) : niceTicks(hi, 8, lo)), (t) => (t === 0 ? o.zeroLabel || '0' : hi - lo > 1400 ? `${t > 0 ? '+' : '−'}${Math.round(Math.abs(t) / 365)} yr` : `${t > 0 ? '+' : ''}${Math.round(t / 30)} mo`));
     svgEl('line', { x1: x(0), x2: x(0), y1: 0, y2: f.ih, class: 'ref-line' }, f.g);
     axisTitle(f, o.xTitle, 'x');
     // jitter rows deterministically to avoid overplotting
@@ -401,7 +403,8 @@
       hover(g, (e) => showTip(e, p.label, [{ key: p.color || 'var(--series-1)', label: 'amount', value: fmt().money(p.amount) }, { label: 'days from approval', value: `${p.t > 0 ? '+' : ''}${Math.round(p.t)}` }, ...(p.tag ? [{ label: '', value: p.tag, muted: true }] : []), ...(p.sub ? [{ label: '', value: p.sub, muted: true }] : [])], e.clientX == null ? centerOf(g) : null));
       clickable(g, p.onClick);
     });
-    return { head: ['Record', 'Days from approval', 'Amount', 'Status'], rows: P.map((p) => [p.label, Math.round(p.t), fmt().money(p.amount), p.tag || '']) };
+    if (all.length > P.length) h('p', 'note', el, `${fmt().int(all.length - P.length)} of ${fmt().int(all.length)} records lie more than ${Math.round(-o.min / 365)} years before or ${Math.round(o.max / 365)} years after the nearest approval and are not drawn; the table lists every record.`);
+    return { head: ['Record', 'Days from approval', 'Amount', 'Status'], rows: all.map((p) => [p.label, Math.round(p.t), fmt().money(p.amount), p.tag || '']) };
   }
 
   /** Slope chart: rows [{label, a, b, color, onClick}] between two labelled columns. */

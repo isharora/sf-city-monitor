@@ -39,23 +39,27 @@ def chunk_rows(logical, key):
             e = m["files"].get(logical)
             if not e or e["status"] != "ok":
                 return []
-            rows = []
+            rows, enc = [], None
             for c in e["chunks"]:
                 txt = open(os.path.join(SITE, c), encoding="utf-8").read()
                 body = txt[txt.index(",", txt.index(",", txt.index(",") + 1) + 1) + 1: txt.rindex(");")]
-                obj = json.loads(body)
-                v = obj.get(key)
+                v = json.loads(body).get(key)
                 if isinstance(v, dict) and v.get("__enc") == "cols":
-                    cols = v["cols"]
-                    for r in v["rows"]:
-                        o = {}
-                        for c2, x in zip(cols, r):
-                            o[c2] = v["dicts"][c2][x] if c2 in v.get("dicts", {}) and x is not None else x
-                        rows.append(o)
-                elif isinstance(v, dict):
+                    enc = v
+                if isinstance(v, dict):
                     rows.extend(v.get("rows", []))
                 elif isinstance(v, list):
                     rows.extend(v)
+            if enc:
+                out = []
+                for r in rows:
+                    o = {}
+                    for c2, x in zip(enc["cols"], r):
+                        if x is None and c2 in enc.get("sparse", []):
+                            continue
+                        o[c2] = enc["dicts"][c2][x] if c2 in enc.get("dicts", {}) and x is not None else x
+                    out.append(o)
+                rows = out
             return rows
     return []
 

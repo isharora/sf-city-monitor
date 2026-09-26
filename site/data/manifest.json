@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-26T08:04:40",
+ "generated_at": "2026-09-26T08:32:23",
  "tool": "site/tools/bundle.py",
  "chunk_limit": 380000,
  "modules": {
@@ -32,7 +32,7 @@
     },
     "nonprofits/orgs/index.json": {
      "status": "ok",
-     "bytes": 423646,
+     "bytes": 414953,
      "raw": [
       "../nonprofits/data/site/orgs/index.json"
      ],
@@ -40,20 +40,20 @@
      "optional": false,
      "errors": [],
      "warnings": [
-      "1 file(s) over the contract's 400 KB (largest 424 KB: index.json); bundled in chunks"
+      "1 file(s) over the contract's 400 KB (largest 415 KB: index.json); bundled in chunks"
      ],
      "notes": [],
-     "rows": 1512,
+     "rows": 1480,
      "repaired": false,
      "chunks": [
       "data/nonprofits/orgs/index.0.js"
      ],
      "split_key": null,
-     "chunk_bytes": 246966
+     "chunk_bytes": 242017
     },
     "nonprofits/payments/cells.json": {
      "status": "ok",
-     "bytes": 2995602,
+     "bytes": 2954034,
      "raw": [
       "../nonprofits/data/site/payments/cells_2007.json",
       "../nonprofits/data/site/payments/cells_2008.json",
@@ -83,7 +83,7 @@
      "notes": [
       "merged 20 files (cells_2007.json + 19 parts); 0 duplicate rows dropped on (fy, dept, org)"
      ],
-     "rows": 34568,
+     "rows": 34080,
      "repaired": false,
      "chunks": [
       "data/nonprofits/payments/cells.0.js",
@@ -91,7 +91,7 @@
       "data/nonprofits/payments/cells.2.js"
      ],
      "split_key": "cells",
-     "chunk_bytes": 986507
+     "chunk_bytes": 972242
     },
     "nonprofits/contracts/contracts.json": {
      "status": "ok",
@@ -112,11 +112,11 @@
       "data/nonprofits/contracts/contracts.0.js"
      ],
      "split_key": null,
-     "chunk_bytes": 156678
+     "chunk_bytes": 148994
     },
     "nonprofits/finances/form990.json": {
      "status": "ok",
-     "bytes": 4848511,
+     "bytes": 4796136,
      "raw": [
       "../nonprofits/data/site/finances/form990.json",
       "../nonprofits/data/site/finances/form990_2011.json",
@@ -141,19 +141,18 @@
      "errors": [],
      "warnings": [],
      "notes": [
-      "merged 17 files (form990.json + 16 parts); 1018 duplicate rows dropped on (org, fy, form)"
+      "merged 17 files (form990.json + 16 parts); 1009 duplicate rows dropped on (org, fy, form)"
      ],
-     "rows": 13856,
+     "rows": 13702,
      "repaired": false,
      "chunks": [
       "data/nonprofits/finances/form990.0.js",
       "data/nonprofits/finances/form990.1.js",
       "data/nonprofits/finances/form990.2.js",
-      "data/nonprofits/finances/form990.3.js",
-      "data/nonprofits/finances/form990.4.js"
+      "data/nonprofits/finances/form990.3.js"
      ],
      "split_key": "rows",
-     "chunk_bytes": 1570440
+     "chunk_bytes": 1335060
     },
     "nonprofits/reviews/findings.json": {
      "status": "ok",
@@ -220,7 +219,7 @@
     },
     "nonprofits/commentary/np-pay.json": {
      "status": "ok",
-     "bytes": 1815,
+     "bytes": 1782,
      "raw": [
       "../nonprofits/data/site/commentary/np-pay.json"
      ],
@@ -230,7 +229,7 @@
      "chunks": [
       "data/nonprofits/commentary/np-pay.0.js"
      ],
-     "chunk_bytes": 1757
+     "chunk_bytes": 1724
     },
     "nonprofits/commentary/np-growth.json": {
      "status": "ok",
@@ -407,11 +406,10 @@
       "data/performance/measures/values.1.js",
       "data/performance/measures/values.2.js",
       "data/performance/measures/values.3.js",
-      "data/performance/measures/values.4.js",
-      "data/performance/measures/values.5.js"
+      "data/performance/measures/values.4.js"
      ],
      "split_key": "rows",
-     "chunk_bytes": 1918020
+     "chunk_bytes": 1698403
     },
     "performance/measures/cost_links.json": {
      "status": "ok",
@@ -622,7 +620,7 @@
       "data/audits/recs/recs.1.js"
      ],
      "split_key": "rows",
-     "chunk_bytes": 478951
+     "chunk_bytes": 447599
     }
    },
    "commentary": {
@@ -729,16 +727,18 @@
   "nw": {
    "module": "network",
    "dash": "nw",
-   "source": "sample",
-   "reason": "no meta.json in network/data/site/",
-   "root": "../design/prototype/sample-data/network",
+   "source": "real",
+   "reason": null,
+   "root": "../network/data/site",
    "nested_layout": false,
    "files": {
     "network/meta.json": {
      "status": "ok",
-     "bytes": 6867,
-     "raw": [],
-     "sample": true,
+     "bytes": 13616,
+     "raw": [
+      "../network/data/site/meta.json"
+     ],
+     "sample": false,
      "optional": false,
      "errors": [],
      "warnings": [],
@@ -749,246 +749,474 @@
       "data/network/meta.0.js"
      ],
      "split_key": null,
-     "chunk_bytes": 6845
+     "chunk_bytes": 13458
     },
     "network/entities.json": {
      "status": "ok",
-     "bytes": 22853,
-     "raw": [],
-     "sample": true,
+     "bytes": 3098614,
+     "raw": [
+      "../network/data/site/entities.json"
+     ],
+     "sample": false,
      "optional": false,
      "errors": [],
-     "warnings": [],
+     "warnings": [
+      "1 strings contain a ZIP-like number (check for addresses; e.g. org-81f33d8dd0.name = 'NTX 94123, LLC(RESPONSIBLE OFFICER: ANH NGUYEN )')",
+      "1 file(s) over the contract's 400 KB (largest 3099 KB: entities.json); bundled in chunks"
+     ],
      "notes": [],
-     "rows": 156,
+     "rows": 17392,
      "repaired": false,
      "chunks": [
-      "data/network/entities.0.js"
+      "data/network/entities.0.js",
+      "data/network/entities.1.js",
+      "data/network/entities.2.js",
+      "data/network/entities.3.js",
+      "data/network/entities.4.js",
+      "data/network/entities.5.js",
+      "data/network/entities.6.js",
+      "data/network/entities.7.js",
+      "data/network/entities.8.js"
      ],
-     "split_key": null,
-     "chunk_bytes": 22899
+     "split_key": "entities",
+     "chunk_bytes": 2569209
     },
     "network/flows.json": {
      "status": "ok",
-     "bytes": 313565,
-     "raw": [],
-     "sample": true,
+     "bytes": 60587887,
+     "raw": [
+      "../network/data/site/flows.json",
+      "../network/data/site/flows/flows_2015.json",
+      "../network/data/site/flows/flows_2016.json",
+      "../network/data/site/flows/flows_2017.json",
+      "../network/data/site/flows/flows_2018.json",
+      "../network/data/site/flows/flows_2019.json",
+      "../network/data/site/flows/flows_2020.json",
+      "../network/data/site/flows/flows_2021.json",
+      "../network/data/site/flows/flows_2022.json",
+      "../network/data/site/flows/flows_2023.json",
+      "../network/data/site/flows/flows_2024.json",
+      "../network/data/site/flows/flows_2025.json",
+      "../network/data/site/flows/flows_2026.json"
+     ],
+     "sample": false,
      "optional": false,
      "errors": [],
-     "warnings": [],
-     "notes": [],
-     "rows": 1730,
+     "warnings": [
+      "13 file(s) over the contract's 400 KB (largest 30294 KB: flows.json); bundled in chunks"
+     ],
+     "notes": [
+      "merged 13 files (flows.json + 12 parts); 125720 duplicate rows dropped on (id)",
+      "bundle omits unused fields: period, ref, sfec126_filing"
+     ],
+     "rows": 125720,
      "repaired": false,
      "chunks": [
-      "data/network/flows.0.js"
+      "data/network/flows.0.js",
+      "data/network/flows.1.js",
+      "data/network/flows.2.js",
+      "data/network/flows.3.js",
+      "data/network/flows.4.js",
+      "data/network/flows.5.js",
+      "data/network/flows.6.js",
+      "data/network/flows.7.js",
+      "data/network/flows.8.js",
+      "data/network/flows.9.js",
+      "data/network/flows.10.js",
+      "data/network/flows.11.js",
+      "data/network/flows.12.js",
+      "data/network/flows.13.js",
+      "data/network/flows.14.js",
+      "data/network/flows.15.js",
+      "data/network/flows.16.js",
+      "data/network/flows.17.js",
+      "data/network/flows.18.js",
+      "data/network/flows.19.js",
+      "data/network/flows.20.js",
+      "data/network/flows.21.js",
+      "data/network/flows.22.js",
+      "data/network/flows.23.js",
+      "data/network/flows.24.js",
+      "data/network/flows.25.js",
+      "data/network/flows.26.js",
+      "data/network/flows.27.js",
+      "data/network/flows.28.js",
+      "data/network/flows.29.js",
+      "data/network/flows.30.js",
+      "data/network/flows.31.js",
+      "data/network/flows.32.js",
+      "data/network/flows.33.js",
+      "data/network/flows.34.js",
+      "data/network/flows.35.js",
+      "data/network/flows.36.js",
+      "data/network/flows.37.js",
+      "data/network/flows.38.js",
+      "data/network/flows.39.js",
+      "data/network/flows.40.js",
+      "data/network/flows.41.js",
+      "data/network/flows.42.js",
+      "data/network/flows.43.js",
+      "data/network/flows.44.js",
+      "data/network/flows.45.js",
+      "data/network/flows.46.js",
+      "data/network/flows.47.js",
+      "data/network/flows.48.js",
+      "data/network/flows.49.js",
+      "data/network/flows.50.js",
+      "data/network/flows.51.js",
+      "data/network/flows.52.js",
+      "data/network/flows.53.js",
+      "data/network/flows.54.js",
+      "data/network/flows.55.js",
+      "data/network/flows.56.js",
+      "data/network/flows.57.js",
+      "data/network/flows.58.js",
+      "data/network/flows.59.js",
+      "data/network/flows.60.js",
+      "data/network/flows.61.js",
+      "data/network/flows.62.js",
+      "data/network/flows.63.js",
+      "data/network/flows.64.js",
+      "data/network/flows.65.js",
+      "data/network/flows.66.js",
+      "data/network/flows.67.js",
+      "data/network/flows.68.js",
+      "data/network/flows.69.js",
+      "data/network/flows.70.js",
+      "data/network/flows.71.js",
+      "data/network/flows.72.js",
+      "data/network/flows.73.js",
+      "data/network/flows.74.js",
+      "data/network/flows.75.js",
+      "data/network/flows.76.js",
+      "data/network/flows.77.js",
+      "data/network/flows.78.js",
+      "data/network/flows.79.js",
+      "data/network/flows.80.js",
+      "data/network/flows.81.js",
+      "data/network/flows.82.js",
+      "data/network/flows.83.js",
+      "data/network/flows.84.js",
+      "data/network/flows.85.js",
+      "data/network/flows.86.js",
+      "data/network/flows.87.js",
+      "data/network/flows.88.js",
+      "data/network/flows.89.js",
+      "data/network/flows.90.js",
+      "data/network/flows.91.js",
+      "data/network/flows.92.js",
+      "data/network/flows.93.js",
+      "data/network/flows.94.js",
+      "data/network/flows.95.js",
+      "data/network/flows.96.js",
+      "data/network/flows.97.js",
+      "data/network/flows.98.js",
+      "data/network/flows.99.js",
+      "data/network/flows.100.js",
+      "data/network/flows.101.js",
+      "data/network/flows.102.js",
+      "data/network/flows.103.js",
+      "data/network/flows.104.js",
+      "data/network/flows.105.js",
+      "data/network/flows.106.js",
+      "data/network/flows.107.js",
+      "data/network/flows.108.js",
+      "data/network/flows.109.js",
+      "data/network/flows.110.js",
+      "data/network/flows.111.js",
+      "data/network/flows.112.js",
+      "data/network/flows.113.js",
+      "data/network/flows.114.js",
+      "data/network/flows.115.js",
+      "data/network/flows.116.js",
+      "data/network/flows.117.js",
+      "data/network/flows.118.js",
+      "data/network/flows.119.js",
+      "data/network/flows.120.js",
+      "data/network/flows.121.js",
+      "data/network/flows.122.js",
+      "data/network/flows.123.js",
+      "data/network/flows.124.js",
+      "data/network/flows.125.js",
+      "data/network/flows.126.js",
+      "data/network/flows.127.js",
+      "data/network/flows.128.js",
+      "data/network/flows.129.js",
+      "data/network/flows.130.js",
+      "data/network/flows.131.js",
+      "data/network/flows.132.js",
+      "data/network/flows.133.js",
+      "data/network/flows.134.js",
+      "data/network/flows.135.js",
+      "data/network/flows.136.js",
+      "data/network/flows.137.js",
+      "data/network/flows.138.js",
+      "data/network/flows.139.js",
+      "data/network/flows.140.js",
+      "data/network/flows.141.js",
+      "data/network/flows.142.js",
+      "data/network/flows.143.js",
+      "data/network/flows.144.js",
+      "data/network/flows.145.js",
+      "data/network/flows.146.js",
+      "data/network/flows.147.js",
+      "data/network/flows.148.js",
+      "data/network/flows.149.js",
+      "data/network/flows.150.js"
      ],
-     "split_key": null,
-     "chunk_bytes": 245959
+     "split_key": "flows",
+     "chunk_bytes": 9410064
     },
     "network/analyses/ban_window.json": {
      "status": "ok",
-     "bytes": 48137,
-     "raw": [],
-     "sample": true,
+     "bytes": 3578397,
+     "raw": [
+      "../network/data/site/analyses/ban_window.json"
+     ],
+     "sample": false,
      "optional": false,
      "errors": [],
-     "warnings": [],
+     "warnings": [
+      "contracts: dropped 2 of 1239 malformed rows (e.g. contracts[0]: 'contract' is null (not allowed))",
+      "1 file(s) over the contract's 400 KB (largest 3578 KB: ban_window.json); bundled in chunks"
+     ],
      "notes": [],
-     "rows": 160,
+     "rows": 9002,
      "repaired": false,
      "chunks": [
-      "data/network/analyses/ban_window.0.js"
+      "data/network/analyses/ban_window.0.js",
+      "data/network/analyses/ban_window.1.js",
+      "data/network/analyses/ban_window.2.js",
+      "data/network/analyses/ban_window.3.js",
+      "data/network/analyses/ban_window.4.js",
+      "data/network/analyses/ban_window.5.js",
+      "data/network/analyses/ban_window.6.js",
+      "data/network/analyses/ban_window.7.js",
+      "data/network/analyses/ban_window.8.js",
+      "data/network/analyses/ban_window.9.js",
+      "data/network/analyses/ban_window.10.js",
+      "data/network/analyses/ban_window.11.js"
      ],
-     "split_key": null,
-     "chunk_bytes": 48194
+     "split_key": "records",
+     "chunk_bytes": 1061851
     },
     "network/analyses/behested.json": {
      "status": "ok",
-     "bytes": 28528,
-     "raw": [],
-     "sample": true,
+     "bytes": 75043,
+     "raw": [
+      "../network/data/site/analyses/behested.json"
+     ],
+     "sample": false,
      "optional": false,
      "errors": [],
      "warnings": [],
      "notes": [],
-     "rows": 140,
+     "rows": 225,
      "repaired": false,
      "chunks": [
       "data/network/analyses/behested.0.js"
      ],
      "split_key": null,
-     "chunk_bytes": 28583
+     "chunk_bytes": 75098
     },
     "network/analyses/lobbying.json": {
      "status": "ok",
-     "bytes": 45288,
-     "raw": [],
-     "sample": true,
+     "bytes": 4603363,
+     "raw": [
+      "../network/data/site/analyses/lobbying.json"
+     ],
+     "sample": false,
      "optional": false,
      "errors": [],
-     "warnings": [],
+     "warnings": [
+      "1 file(s) over the contract's 400 KB (largest 4603 KB: lobbying.json); bundled in chunks"
+     ],
      "notes": [],
-     "rows": 329,
+     "rows": 27511,
      "repaired": false,
      "chunks": [
-      "data/network/analyses/lobbying.0.js"
+      "data/network/analyses/lobbying.0.js",
+      "data/network/analyses/lobbying.1.js",
+      "data/network/analyses/lobbying.2.js"
      ],
-     "split_key": null,
-     "chunk_bytes": 45343
+     "split_key": "rows",
+     "chunk_bytes": 969201
     },
     "network/analyses/concentration.json": {
      "status": "ok",
-     "bytes": 6324,
-     "raw": [],
-     "sample": true,
+     "bytes": 155413,
+     "raw": [
+      "../network/data/site/analyses/concentration.json"
+     ],
+     "sample": false,
      "optional": false,
      "errors": [],
      "warnings": [],
      "notes": [],
-     "rows": 26,
+     "rows": 669,
      "repaired": false,
      "chunks": [
       "data/network/analyses/concentration.0.js"
      ],
      "split_key": null,
-     "chunk_bytes": 6384
+     "chunk_bytes": 80713
     },
     "network/analyses/loop.json": {
      "status": "ok",
-     "bytes": 8255,
-     "raw": [],
-     "sample": true,
+     "bytes": 24595,
+     "raw": [
+      "../network/data/site/analyses/loop.json"
+     ],
+     "sample": false,
      "optional": false,
      "errors": [],
      "warnings": [],
      "notes": [],
-     "rows": 38,
+     "rows": 85,
      "repaired": false,
      "chunks": [
       "data/network/analyses/loop.0.js"
      ],
      "split_key": null,
-     "chunk_bytes": 9783
+     "chunk_bytes": 27788
     }
    },
    "commentary": {
     "network/commentary/nw-overview.json": {
      "status": "ok",
-     "bytes": 1942,
-     "raw": [],
-     "sample": true,
+     "bytes": 2257,
+     "raw": [
+      "../network/data/site/commentary/nw-overview.json"
+     ],
+     "sample": false,
      "errors": [],
      "warnings": [],
      "chunks": [
       "data/network/commentary/nw-overview.0.js"
      ],
-     "chunk_bytes": 2002
+     "chunk_bytes": 2317
     },
     "network/commentary/nw-graph.json": {
      "status": "ok",
-     "bytes": 1012,
-     "raw": [],
-     "sample": true,
+     "bytes": 1000,
+     "raw": [
+      "../network/data/site/commentary/nw-graph.json"
+     ],
+     "sample": false,
      "errors": [],
      "warnings": [],
      "chunks": [
       "data/network/commentary/nw-graph.0.js"
      ],
-     "chunk_bytes": 1069
+     "chunk_bytes": 1057
     },
     "network/commentary/nw-ban.json": {
      "status": "ok",
-     "bytes": 2083,
-     "raw": [],
-     "sample": true,
+     "bytes": 2373,
+     "raw": [
+      "../network/data/site/commentary/nw-ban.json"
+     ],
+     "sample": false,
      "errors": [],
      "warnings": [],
      "chunks": [
       "data/network/commentary/nw-ban.0.js"
      ],
-     "chunk_bytes": 2138
+     "chunk_bytes": 2428
     },
     "network/commentary/nw-behested.json": {
      "status": "ok",
-     "bytes": 1182,
-     "raw": [],
-     "sample": true,
+     "bytes": 1609,
+     "raw": [
+      "../network/data/site/commentary/nw-behested.json"
+     ],
+     "sample": false,
      "errors": [],
      "warnings": [],
      "chunks": [
       "data/network/commentary/nw-behested.0.js"
      ],
-     "chunk_bytes": 1242
+     "chunk_bytes": 1669
     },
     "network/commentary/nw-lobby.json": {
      "status": "ok",
-     "bytes": 1091,
-     "raw": [],
-     "sample": true,
+     "bytes": 1303,
+     "raw": [
+      "../network/data/site/commentary/nw-lobby.json"
+     ],
+     "sample": false,
      "errors": [],
      "warnings": [],
      "chunks": [
       "data/network/commentary/nw-lobby.0.js"
      ],
-     "chunk_bytes": 1148
+     "chunk_bytes": 1360
     },
     "network/commentary/nw-concentration.json": {
      "status": "ok",
-     "bytes": 1048,
-     "raw": [],
-     "sample": true,
+     "bytes": 1231,
+     "raw": [
+      "../network/data/site/commentary/nw-concentration.json"
+     ],
+     "sample": false,
      "errors": [],
      "warnings": [],
      "chunks": [
       "data/network/commentary/nw-concentration.0.js"
      ],
-     "chunk_bytes": 1113
+     "chunk_bytes": 1296
     },
     "network/commentary/nw-loop.json": {
      "status": "ok",
-     "bytes": 1121,
-     "raw": [],
-     "sample": true,
+     "bytes": 1024,
+     "raw": [
+      "../network/data/site/commentary/nw-loop.json"
+     ],
+     "sample": false,
      "errors": [],
      "warnings": [],
      "chunks": [
       "data/network/commentary/nw-loop.0.js"
      ],
-     "chunk_bytes": 1177
+     "chunk_bytes": 1080
     },
     "network/commentary/nw-entities.json": {
      "status": "ok",
-     "bytes": 286,
-     "raw": [],
-     "sample": true,
+     "bytes": 403,
+     "raw": [
+      "../network/data/site/commentary/nw-entities.json"
+     ],
+     "sample": false,
      "errors": [],
      "warnings": [],
      "chunks": [
       "data/network/commentary/nw-entities.0.js"
      ],
-     "chunk_bytes": 346
+     "chunk_bytes": 463
     },
     "network/commentary/story_nw.json": {
      "status": "ok",
-     "bytes": 1250,
-     "raw": [],
-     "sample": true,
+     "bytes": 1271,
+     "raw": [
+      "../network/data/site/commentary/story_nw.json"
+     ],
+     "sample": false,
      "errors": [],
      "warnings": [],
      "chunks": [
       "data/network/commentary/story_nw.0.js"
      ],
-     "chunk_bytes": 1321
+     "chunk_bytes": 1328
     }
    },
-   "as_of": "2026-09-15",
-   "sample_meta": true
+   "as_of": "2026-09-26",
+   "sample_meta": false
   }
  },
  "site": {
   "site/site.json": {
    "status": "ok",
-   "bytes": 9935,
+   "bytes": 9933,
    "chunks": [
     "data/site/site.0.js"
    ],

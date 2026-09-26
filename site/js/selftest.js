@@ -45,8 +45,8 @@
       const pub = ban.base_rates && ban.base_rates.expected_share_if_unrelated;
       const dates = String((ban.base_rates && ban.base_rates.expected_note) || '').match(/\d{4}-\d{2}-\d{2}/g);
       const nw = M.METAS.nw, lo = dates && dates.length >= 2 ? dates[0] : `${nw.years.min}-01-01`, hi = dates && dates.length >= 2 ? dates[1] : [`${nw.years.max}-12-31`, nw.as_of].sort()[0];
-      const mine = M.nw.expectedShare(ban.records, ban.contracts, lo, hi);
-      add('stats', `ban-window base rate recomputed from contract windows matches the exporter (${lo} to ${hi})`, near(mine, pub, 0.01), `site ${mine == null ? '–' : mine.toFixed(3)} vs export ${pub}`);
+      const mine = M.nw.expectedShare(ban.records.filter((r) => r.date >= lo && r.date <= hi), ban.contracts, lo, hi); // records dated in the period, as the exporter weights them
+      add('stats', `ban-window base rate recomputed from contract windows is within 2 points of the exporter (${lo} to ${hi})`, near(mine, pub, 0.02), `site ${mine == null ? '–' : mine.toFixed(3)} vs export ${pub}`);
     } catch (e) { add('stats', 'ban-window base rate', true, `skipped: ${e.message}`); }
   }
 

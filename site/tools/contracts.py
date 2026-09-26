@@ -159,6 +159,7 @@ SPEC = {
             "row_rules": ["no_addresses"],
         },
         "flows.json": {
+            "bundle_drop": {"flows": ["ref", "sfec126_filing", "period"]},
             "split": "flows/flows_*.json", "key": ["id"],
             "arrays": {"flows": {"id": "str", "from": "str", "to": "str", "type": "str", "date": "date", "amount": "num?", "count": "~int?"}},
             "enums": {"flows.type": "dim:flow", "flows.from": "ref:entities.json#entities.id", "flows.to": "ref:entities.json#entities.id"},
@@ -174,7 +175,7 @@ SPEC = {
             "row_rules": ["review_has_reason"],
         },
         "analyses/behested.json": {
-            "arrays": {"rows": {"flow": "str", "official": "str", "payor": "str", "payee": "str", "date": "date", "amount": "num?", "purpose": "~str?",
+            "arrays": {"rows": {"flow": "str", "official": "str?", "payor": "str", "payee": "str", "date": "date", "amount": "num?", "purpose": "~str?",
                                 "payor_interested_party": "bool", "filed_within_30_days": "~bool?"}},
         },
         "analyses/lobbying.json": {

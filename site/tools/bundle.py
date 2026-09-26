@@ -42,6 +42,7 @@ DASH = {"nonprofits": "np", "performance": "pf", "audits": "au", "network": "nw"
 YEAR_FIELDS = ("fy", "first_fy", "last_fy", "dropped_fy", "base_fy")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}")
 STREET_RE = re.compile(r"\b\d{1,5}\s+(?:[A-Z0-9][\w'.-]*\s+){1,4}(?:St|Street|Ave|Avenue|Blvd|Boulevard|Rd|Road|Dr|Drive|Way|Ln|Lane|Ct|Court|Pl|Place|Ter|Terrace)\b\.?")
+ORGLIKE_RE = re.compile(r"\b(Foundation|LLC|L\.L\.C|Inc|Corp|Corporation|Company|Co|Association|Assn|Center|Centre|Church|Partners|Partnership|Group|Trust|Fund|School|Hospital|Clinic|Associates|Holdings|Properties|Owner|Ventures|LP|L\.P|Services|Housing|Project|Council|Society|Club|Hotel|Restaurant|Bar|Cafe)\b", re.I)
 ZIP_RE = re.compile(r"(?<![\w-])9[0-6]\d{3}(?:-\d{4})?(?![\w-])")
 PER_TYPE_ENTITY = ("official", "committee", "department", "contractor", "nonprofit", "lobbyist", "individuals", "donor_org")
 PER_TYPE_FLOW = ("contribution", "behested", "lobby_contact", "lobby_payment", "contract", "payment")
@@ -268,13 +269,26 @@ def validate(module, rel, obj, spec, meta, loaded, real):
             rep.err(f"'{key}' array missing")
             continue
         rows_total += len(arr)
-        agg = {}
+        agg, bad_rows = {}, []
         for i, r in enumerate(arr):
             if not isinstance(r, dict):
                 _note(agg, rep, ("row", "notobj"), f"{key}[{i}]", "row is not an object")
+                bad_rows.append(i)
                 continue
+            before = sum(v[0] for v in agg.values())
             check_fields(r, fields, f"{key}[{i}]", rep, agg)
-        flush(agg, rep, len(arr), key)
+            if sum(v[0] for v in agg.values()) > before:
+                bad_rows.append(i)
+        # A few malformed rows (<= 1% of the array) are dropped with a warning instead of blanking every view
+        # that needs the file; more than that means the export is broken and the file is not used.
+        if bad_rows and len(bad_rows) <= max(1, len(arr) // 100):
+            drop = set(bad_rows)
+            msgs = [ex for (_, _), (_, ex) in agg.items()]
+            obj[key] = [r for i, r in enumerate(arr) if i not in drop]
+            rows_total -= len(drop)
+            rep.warn(f"{key}: dropped {len(drop)} of {len(arr)} malformed rows (e.g. {msgs[0]})")
+        else:
+            flush(agg, rep, len(arr), key)
     # enums and references
     for path, rule in spec.get("enums", {}).items():
         key, field = path.split(".")
@@ -392,7 +406,7 @@ def rr_no_addresses(obj, rep, real):
             if not isinstance(r, dict):
                 continue
             for k, s in _strings(r):
-                if STREET_RE.search(s) and not (k == "name" and r.get("type") not in ("individuals",)):
+                if STREET_RE.search(s) and not (k == "name" and r.get("type") not in ("individuals",)) and not ORGLIKE_RE.search(s):
                     street += 1; ex_s = ex_s or f"{r.get('id')}.{k} = {s[:60]!r}"
                 if ZIP_RE.search(s):
                     zipc += 1; ex_z = ex_z or f"{r.get('id')}.{k} = {s[:60]!r}"
@@ -575,7 +589,7 @@ def encode_array(rows):
         strs = [v for v in vals if v is not None]
         if strs and all(isinstance(v, str) for v in strs):
             distinct = sorted(set(strs))
-            if len(distinct) <= max(64, len(rows) // 20) and sum(len(v) for v in strs) / len(strs) > 6:
+            if len(distinct) <= max(64, len(rows) // 5) and sum(len(v) for v in strs) / len(strs) > 6:
                 dicts[c] = distinct
     index = {c: {v: i for i, v in enumerate(d)} for c, d in dicts.items()}
     out = []

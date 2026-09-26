@@ -403,7 +403,7 @@ select.ctl, .range select { font: inherit; font-size: 12.5px; padding: 3px 6px; 
 .tag-high { background: var(--text-primary); color: var(--surface-1); }
 .review-wrap { display: inline; }
 .review-cite { font-family: var(--mono); font-size: 11px; color: var(--text-secondary); margin-left: 4px; }
-.review-why { display: block; color: var(--text-muted); font-size: 12px; white-space: normal; max-width: 420px; margin-top: 3px; }
+.review-why { display: block; color: var(--text-muted); font-size: 12px; white-space: normal; max-width: 560px; min-width: 280px; margin-top: 3px; }
 th.sortable .th-btn { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: inherit; font-weight: inherit; }
 th.sortable[aria-sort="ascending"] .th-btn::after { content: " ▲"; font-size: 9px; }
 th.sortable[aria-sort="descending"] .th-btn::after { content: " ▼"; font-size: 9px; }
