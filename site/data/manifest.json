@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-26T08:32:23",
+ "generated_at": "2026-09-26T08:35:09",
  "tool": "site/tools/bundle.py",
  "chunk_limit": 380000,
  "modules": {
@@ -734,7 +734,7 @@
    "files": {
     "network/meta.json": {
      "status": "ok",
-     "bytes": 13616,
+     "bytes": 13001,
      "raw": [
       "../network/data/site/meta.json"
      ],
@@ -749,11 +749,11 @@
       "data/network/meta.0.js"
      ],
      "split_key": null,
-     "chunk_bytes": 13458
+     "chunk_bytes": 12883
     },
     "network/entities.json": {
      "status": "ok",
-     "bytes": 3098614,
+     "bytes": 3038470,
      "raw": [
       "../network/data/site/entities.json"
      ],
@@ -761,11 +761,11 @@
      "optional": false,
      "errors": [],
      "warnings": [
-      "1 strings contain a ZIP-like number (check for addresses; e.g. org-81f33d8dd0.name = 'NTX 94123, LLC(RESPONSIBLE OFFICER: ANH NGUYEN )')",
-      "1 file(s) over the contract's 400 KB (largest 3099 KB: entities.json); bundled in chunks"
+      "1 strings contain a ZIP-like number (check for addresses; e.g. org-81f33d8dd0.name = 'NTX 94123, LLC')",
+      "1 file(s) over the contract's 400 KB (largest 3038 KB: entities.json); bundled in chunks"
      ],
      "notes": [],
-     "rows": 17392,
+     "rows": 17213,
      "repaired": false,
      "chunks": [
       "data/network/entities.0.js",
@@ -779,11 +779,11 @@
       "data/network/entities.8.js"
      ],
      "split_key": "entities",
-     "chunk_bytes": 2569209
+     "chunk_bytes": 2541179
     },
     "network/flows.json": {
      "status": "ok",
-     "bytes": 60587887,
+     "bytes": 60478995,
      "raw": [
       "../network/data/site/flows.json",
       "../network/data/site/flows/flows_2015.json",
@@ -803,13 +803,13 @@
      "optional": false,
      "errors": [],
      "warnings": [
-      "13 file(s) over the contract's 400 KB (largest 30294 KB: flows.json); bundled in chunks"
+      "13 file(s) over the contract's 400 KB (largest 30239 KB: flows.json); bundled in chunks"
      ],
      "notes": [
-      "merged 13 files (flows.json + 12 parts); 125720 duplicate rows dropped on (id)",
+      "merged 13 files (flows.json + 12 parts); 125550 duplicate rows dropped on (id)",
       "bundle omits unused fields: period, ref, sfec126_filing"
      ],
-     "rows": 125720,
+     "rows": 125550,
      "repaired": false,
      "chunks": [
       "data/network/flows.0.js",
@@ -965,11 +965,11 @@
       "data/network/flows.150.js"
      ],
      "split_key": "flows",
-     "chunk_bytes": 9410064
+     "chunk_bytes": 9393979
     },
     "network/analyses/ban_window.json": {
      "status": "ok",
-     "bytes": 3578397,
+     "bytes": 3577901,
      "raw": [
       "../network/data/site/analyses/ban_window.json"
      ],
@@ -977,7 +977,6 @@
      "optional": false,
      "errors": [],
      "warnings": [
-      "contracts: dropped 2 of 1239 malformed rows (e.g. contracts[0]: 'contract' is null (not allowed))",
       "1 file(s) over the contract's 400 KB (largest 3578 KB: ban_window.json); bundled in chunks"
      ],
      "notes": [],
@@ -1002,7 +1001,7 @@
     },
     "network/analyses/behested.json": {
      "status": "ok",
-     "bytes": 75043,
+     "bytes": 74994,
      "raw": [
       "../network/data/site/analyses/behested.json"
      ],
@@ -1017,11 +1016,11 @@
       "data/network/analyses/behested.0.js"
      ],
      "split_key": null,
-     "chunk_bytes": 75098
+     "chunk_bytes": 75049
     },
     "network/analyses/lobbying.json": {
      "status": "ok",
-     "bytes": 4603363,
+     "bytes": 4599016,
      "raw": [
       "../network/data/site/analyses/lobbying.json"
      ],
@@ -1029,10 +1028,10 @@
      "optional": false,
      "errors": [],
      "warnings": [
-      "1 file(s) over the contract's 400 KB (largest 4603 KB: lobbying.json); bundled in chunks"
+      "1 file(s) over the contract's 400 KB (largest 4599 KB: lobbying.json); bundled in chunks"
      ],
      "notes": [],
-     "rows": 27511,
+     "rows": 27487,
      "repaired": false,
      "chunks": [
       "data/network/analyses/lobbying.0.js",
@@ -1040,11 +1039,11 @@
       "data/network/analyses/lobbying.2.js"
      ],
      "split_key": "rows",
-     "chunk_bytes": 969201
+     "chunk_bytes": 966999
     },
     "network/analyses/concentration.json": {
      "status": "ok",
-     "bytes": 155413,
+     "bytes": 155391,
      "raw": [
       "../network/data/site/analyses/concentration.json"
      ],
@@ -1059,7 +1058,7 @@
       "data/network/analyses/concentration.0.js"
      ],
      "split_key": null,
-     "chunk_bytes": 80713
+     "chunk_bytes": 80691
     },
     "network/analyses/loop.json": {
      "status": "ok",

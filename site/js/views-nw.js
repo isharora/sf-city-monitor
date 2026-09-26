@@ -132,7 +132,7 @@
       // Base rate for exactly the records in view, over the selected years (capped at the data's as-of date).
       const lo = `${sc.y0}-01-01`, hi = [`${sc.y1}-12-31`, ctx.meta.as_of].sort()[0];
       const exp = recs.length ? expectedShare(recs, ban.contracts, lo, hi) : null, expAll = ban.base_rates.expected_share_if_unrelated;
-      Object.assign(ctx.slots, { __small: recs.length < ctx.meta.small_n, records: recs.length, records_fmt: fmt.int(recs.length), contracts_fmt: fmt.int(new Set(recs.map((r) => r.nearest_contract)).size), inside_fmt: fmt.int(inside.length), inside_share: fmt.pct(recs.length ? inside.length / recs.length : null), expected_share: fmt.pct(exp), covered_fmt: fmt.int(covered.length) });
+      Object.assign(ctx.slots, { __small: recs.length < ctx.meta.small_n, records: recs.length, records_fmt: fmt.int(recs.length), contracts_fmt: fmt.int(new Set(recs.map((r) => r.nearest_contract)).size), inside_fmt: fmt.int(inside.length), inside_share: fmt.pct(recs.length ? inside.length / recs.length : null), expected_share: fmt.pct(exp), covered_fmt: fmt.int(flagged.length), covered_all_fmt: fmt.int(covered.length) });
       ctx.live('ban');
       ctx.rule('ban');
       ctx.fair(`${ctx.meta.fairness.timing} ${ctx.meta.fairness.review} Individuals are attributed to a contractor through the employer and occupation fields on Form 460 and the principals listed on SFEC-126(f)4; they are never named here.`, 'Read this view with the base rate');
