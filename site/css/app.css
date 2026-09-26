@@ -434,3 +434,12 @@ svg g[tabindex]:focus-visible .hit, svg g[tabindex]:focus-visible > rect.hit, sv
 svg g.nw-node:focus-visible circle:first-child { stroke: var(--focus); stroke-width: 3; }
 svg path.nw-edge:focus-visible { stroke: var(--focus) !important; opacity: 1 !important; }
 svg rect.hit:focus-visible { fill: var(--focus); fill-opacity: .08; }
+/* narrow screens: sidebar above content */
+@media (max-width: 820px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--border); }
+  .sidebar-foot { display: none; }
+  .storybar { left: 0; grid-template-columns: 1fr; }
+  .topbar { flex-wrap: wrap; }
+  .sample-note { display: none; }
+}

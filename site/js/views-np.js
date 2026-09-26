@@ -44,7 +44,7 @@
   // ---------------------------------------------------------------- overview
   M.views['np-overview'] = {
     id: 'np-overview', dash: 'np', nav: 'Overview', title: 'Follow the nonprofit money', what: 'City payments to nonprofits, who receives them, and how dependent those organizations are on the city.',
-    how: 'Tiles and charts use your filters. Real dollars deflate each fiscal year with the SF-area CPI to FY2025 dollars. Click an organization to open its profile, which links to its finances, monitoring results, the audits of the departments that fund it, and its network connections.',
+    how: 'Tiles and charts use your filters. Real dollars deflate each fiscal year with the SF-area CPI to the base year shown on the Dollars switch. Click an organization to open its profile, which links to its finances, monitoring results, the audits of the departments that fund it, and its network connections.',
     filters: ['years', 'dept', 'area', 'size', 'real'], files: Object.assign({ rev: 'nonprofits/reviews/findings.json' }, FILES),
     render(ctx) {
       const sc = scope(ctx), { cells, orgSet, y0, y1 } = sc;

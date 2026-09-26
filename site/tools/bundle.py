@@ -735,6 +735,10 @@ def bundle_module(module, report_lines, quiet):
         L.append(f"   real export found at {os.path.relpath(real_root, ROOT)}{' (nested layout)' if nested else ''}; previewing it against the contract:")
         prev = preview_real(module, real_root)
         L.extend("   " + x for x in prev)
+    if decision == "real":
+        ex = extra_files(module, real_root)
+        if ex:
+            L.append(f"   not in the contract, not loaded: {len(ex)} files ({', '.join(ex[:5])}{' …' if len(ex) > 5 else ''})")
     for logical, e in list(mod["files"].items()) + list(mod["commentary"].items()):
         if quiet and e["status"] == "ok" and not e["errors"]:
             continue
@@ -782,15 +786,21 @@ def preview_real(module, root):
     want = C.VIEWS[module] + [C.STORY[module]]
     missing = [v for v in want if v not in have]
     out.append(f"  commentary: {len(want) - len(missing)} of {len(want)} view files present" + (f"; missing {', '.join(missing[:4])}{'…' if len(missing) > 4 else ''}" if missing else ""))
+    extra = extra_files(module, root)
+    if extra:
+        out.append(f"  not in the contract (ignored): {', '.join(extra[:6])}{' …' if len(extra) > 6 else ''}")
+    return out
+
+
+def extra_files(module, root):
+    """JSON files in an export that no contract entry reads (reported, never loaded)."""
     extra = []
     for dirpath, _, fs in os.walk(root):
         for f in fs:
             rp = os.path.relpath(os.path.join(dirpath, f), root)
             if f.endswith(".json") and not any(rp == k or (C.SPEC[module][k].get("split") and fnmatch.fnmatch(rp, C.SPEC[module][k]["split"])) for k in C.SPEC[module]) and not rp.startswith("commentary"):
                 extra.append(rp)
-    if extra:
-        out.append(f"  not in the contract (ignored): {', '.join(sorted(extra)[:6])}{' …' if len(extra) > 6 else ''}")
-    return out
+    return sorted(extra)
 
 
 def build_site_json(mods, loaded_meta):

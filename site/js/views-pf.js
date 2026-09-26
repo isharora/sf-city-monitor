@@ -46,7 +46,7 @@
   // ---------------------------------------------------------------- overview
   M.views['pf-overview'] = {
     id: 'pf-overview', dash: 'pf', nav: 'Overview', title: 'Budget vs outcomes', what: 'What departments spend, in real dollars and per resident, and whether they meet their own performance targets.',
-    how: 'Real dollars deflate each year with the SF-area CPI to FY2025. Per-resident figures use the population estimate for each fiscal year. “Met” compares actual with target in the measure’s direction (higher is better, or lower is better).',
+    how: 'Real dollars deflate each year with the SF-area CPI to the base year shown on the Dollars switch. Per-resident figures use the population estimate for each fiscal year. “Met” compares actual with target in the measure’s direction (higher is better, or lower is better).',
     filters: ['years', 'group', 'dept', 'real'], files: Object.assign({ measures: 'performance/measures/measures.json', values: 'performance/measures/values.json', staff: 'performance/staffing/cells.json' }, FILES),
     render(ctx) {
       const sc = scope(ctx), { y0, y1, spend } = sc, ms = measureScope(ctx, sc);
