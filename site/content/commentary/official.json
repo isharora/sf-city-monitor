@@ -1,0 +1,20 @@
+{
+ "view": "official",
+ "author": "SF City Monitor",
+ "headline": null,
+ "paragraphs": [],
+ "annotations": [],
+ "templates": [],
+ "caveats": [
+  {
+   "severity": "high",
+   "text": "Contributions from individuals are attributed to contractors through self-reported employer and occupation fields; misattribution is possible. Timing near a contract approval is a pattern worth checking, not proof of influence."
+  }
+ ],
+ "sources": [
+  "network/entities.json",
+  "network/flows.json",
+  "network/analyses/behested.json",
+  "network/analyses/ban_window.json"
+ ]
+}

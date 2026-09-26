@@ -1,0 +1,1 @@
+{"sample":true,"view":"org","author":"Sample commentary (synthetic data)","headline":"Organization profile.","paragraphs":[],"annotations":[],"templates":[{"id":"org","template":"{name} received {city_total} from {depts_fmt} departments over FY{fy0}–FY{fy1}; {city_share_sentence}"}],"caveats":[],"sources":[]}

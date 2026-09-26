@@ -1,0 +1,1 @@
+SFCM_DATA_PART("site/commentary/methods.json",0,1,{"view":"methods","author":"SF City Monitor","headline":null,"paragraphs":[],"annotations":[],"templates":[],"caveats":[],"sources":["site/data/manifest.json","*/data/site/meta.json"]});

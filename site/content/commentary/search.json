@@ -1,0 +1,15 @@
+{
+ "view": "search",
+ "author": "SF City Monitor",
+ "headline": null,
+ "paragraphs": [],
+ "annotations": [],
+ "templates": [],
+ "caveats": [
+  {
+   "severity": "low",
+   "text": "Search matches names and titles as published; an organization that appears under different vendor names in different datasets may show up more than once."
+  }
+ ],
+ "sources": []
+}

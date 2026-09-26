@@ -1,0 +1,1 @@
+SFCM_DATA_PART("network/commentary/nw-entities.json",0,1,{"sample":true,"view":"nw-entities","author":"Sample commentary (synthetic data)","headline":"Every named entity in the network, with its type and totals.","paragraphs":["Open an entity for its profile."],"annotations":[],"templates":[],"caveats":[],"sources":["network/entities.json"]});
