@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-26T09:57:37",
+ "generated_at": "2026-09-26T10:17:09",
  "tool": "site/tools/bundle.py",
  "chunk_limit": 380000,
  "modules": {
@@ -1434,7 +1434,7 @@
    "files": {
     "audits/meta.json": {
      "status": "ok",
-     "bytes": 11937,
+     "bytes": 11938,
      "raw": [
       "../audits/data/site/meta.json"
      ],
@@ -1449,7 +1449,7 @@
       "data/audits/meta.0.js"
      ],
      "split_key": null,
-     "chunk_bytes": 11978
+     "chunk_bytes": 11979
     },
     "audits/reports/reports.json": {
      "status": "ok",
@@ -1714,63 +1714,79 @@
    "commentary": {
     "audits/commentary/au-overview.json": {
      "status": "ok",
-     "bytes": 2600,
+     "bytes": 4553,
      "raw": [
       "../audits/data/site/commentary/au-overview.json"
      ],
      "sample": false,
      "errors": [],
      "warnings": [],
+     "repaired": true,
+     "notes": [
+      "site override applied (3x, content/overrides.json)"
+     ],
      "chunks": [
       "data/audits/commentary/au-overview.0.js"
      ],
-     "chunk_bytes": 2524
+     "chunk_bytes": 4521
     },
     "audits/commentary/au-status.json": {
      "status": "ok",
-     "bytes": 1635,
+     "bytes": 4539,
      "raw": [
       "../audits/data/site/commentary/au-status.json"
      ],
      "sample": false,
      "errors": [],
      "warnings": [],
+     "repaired": true,
+     "notes": [
+      "site override applied (2x, content/overrides.json)"
+     ],
      "chunks": [
       "data/audits/commentary/au-status.0.js"
      ],
-     "chunk_bytes": 1592
+     "chunk_bytes": 4504
     },
     "audits/commentary/au-time.json": {
      "status": "ok",
-     "bytes": 1740,
+     "bytes": 2595,
      "raw": [
       "../audits/data/site/commentary/au-time.json"
      ],
      "sample": false,
      "errors": [],
      "warnings": [],
+     "repaired": true,
+     "notes": [
+      "site override applied (2x, content/overrides.json)"
+     ],
      "chunks": [
       "data/audits/commentary/au-time.0.js"
      ],
-     "chunk_bytes": 1695
+     "chunk_bytes": 2660
     },
     "audits/commentary/au-agreement.json": {
      "status": "ok",
-     "bytes": 1472,
+     "bytes": 3162,
      "raw": [
       "../audits/data/site/commentary/au-agreement.json"
      ],
      "sample": false,
      "errors": [],
      "warnings": [],
+     "repaired": true,
+     "notes": [
+      "site override applied (2x, content/overrides.json)"
+     ],
      "chunks": [
       "data/audits/commentary/au-agreement.0.js"
      ],
-     "chunk_bytes": 1432
+     "chunk_bytes": 3251
     },
     "audits/commentary/au-repeat.json": {
      "status": "ok",
-     "bytes": 1460,
+     "bytes": 3638,
      "raw": [
       "../audits/data/site/commentary/au-repeat.json"
      ],
@@ -1780,11 +1796,11 @@
      "chunks": [
       "data/audits/commentary/au-repeat.0.js"
      ],
-     "chunk_bytes": 1417
+     "chunk_bytes": 3554
     },
     "audits/commentary/au-open.json": {
      "status": "ok",
-     "bytes": 1601,
+     "bytes": 3379,
      "raw": [
       "../audits/data/site/commentary/au-open.json"
      ],
@@ -1794,11 +1810,11 @@
      "chunks": [
       "data/audits/commentary/au-open.0.js"
      ],
-     "chunk_bytes": 1556
+     "chunk_bytes": 3293
     },
     "audits/commentary/au-reports.json": {
      "status": "ok",
-     "bytes": 489,
+     "bytes": 694,
      "raw": [
       "../audits/data/site/commentary/au-reports.json"
      ],
@@ -1808,11 +1824,11 @@
      "chunks": [
       "data/audits/commentary/au-reports.0.js"
      ],
-     "chunk_bytes": 506
+     "chunk_bytes": 705
     },
     "audits/commentary/story_au.json": {
      "status": "ok",
-     "bytes": 1382,
+     "bytes": 2240,
      "raw": [
       "../audits/data/site/commentary/story_au.json"
      ],
@@ -1822,7 +1838,7 @@
      "chunks": [
       "data/audits/commentary/story_au.0.js"
      ],
-     "chunk_bytes": 1275
+     "chunk_bytes": 1997
     }
    },
    "as_of": "2026-09-26",

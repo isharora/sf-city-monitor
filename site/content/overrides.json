@@ -16,5 +16,58 @@
    "find": "The \"expected by chance\" bar pools all of a contractor's windows and overstates chance; the matched benchmark in the analyst's read (19%) is the fair comparison.",
    "replace": "The \"expected by chance\" bar is the matched benchmark (19.4%) for all years; it rests on the approval-date proxy and the election-calendar weighting, and it does not change with your filters."
   }
+ ],
+ "audits/commentary/au-overview.json": [
+  {
+   "why": "Red team 2: the site now computes impl_share over recommendations with a recorded follow-up status (as the finding does) and shows the no-status count; the template described the old all-rows computation.",
+   "find": "{impl_share} of all of them are recorded as implemented (those never followed up count as not recorded); {open_fmt} were open or in progress at their last follow-up; median {median_months} months from report to recorded implementation.",
+   "replace": "Of the {known_fmt} with a recorded follow-up status, {impl_share} are recorded as implemented ({nostatus_fmt} have no follow-up status and are left out of the rate); {open_fmt} were open or in progress at their last follow-up; median {median_months} months from report to recorded implementation, among the {timed_fmt} with a dated closure."
+  },
+  {
+   "why": "Paragraph described the old all-rows Implemented tile (40% unfiltered); the tile now uses the known-status denominator.",
+   "find": "The Implemented tile divides by every matched recommendation, including those never followed up, so unfiltered it reads 40%; the rates in the finding use only recommendations with a recorded status.",
+   "replace": "The Implemented tile and every rate on this dashboard use only recommendations with a recorded status, as the finding does, and each shows how many recommendations have none."
+  },
+  {
+   "why": "Rates now use recommendations with a recorded status; the view falls back when fewer than small_n of them match (e.g. BLA alone), so the fallback names that count.",
+   "find": "Only {recs_fmt} recommendations match, too few for stable shares; widen the years or clear a filter.",
+   "replace": "Only {known_fmt} of the {recs_fmt} matching recommendations have a recorded follow-up status, too few for stable shares; widen the years or clear a filter."
+  }
+ ],
+ "audits/commentary/au-status.json": [
+  {
+   "why": "Shares are now over recommendations with a recorded status (red team 2); no-status count shown separately.",
+   "find": "{recs_fmt} recommendations issued {years}, as shares of all of them: {impl_share} implemented, {prog_share} in progress, {open_share} open, {notimpl_share} will not be implemented; the rest were closed another way or have no follow-up status.",
+   "replace": "{recs_fmt} recommendations issued {years}; of the {known_fmt} with a recorded status, {impl_share} are implemented, {prog_share} in progress, {open_share} open and {notimpl_share} will not be implemented, and the rest were closed another way. {nostatus_fmt} have no follow-up status and are left out of these shares."
+  },
+  {
+   "why": "Rates now use recommendations with a recorded status; the view falls back when fewer than small_n of them match (e.g. BLA alone), so the fallback names that count.",
+   "find": "Only {recs_fmt} recommendations match, too few for stable shares; widen the years or clear a filter.",
+   "replace": "Only {known_fmt} of the {recs_fmt} matching recommendations have a recorded follow-up status, too few for stable shares; widen the years or clear a filter."
+  }
+ ],
+ "audits/commentary/au-agreement.json": [
+  {
+   "why": "Response shares are now over recommendations with a recorded response, and impl_agreed / impl_disagreed over those with a recorded status (red team 2); the template described the old all-rows computation.",
+   "find": "{recs_fmt} recommendations issued {years}: {agree_share} agreed at publication, {partial_share} partially, {disagree_share} disagreed, and the rest printed no response. {impl_agreed} of the agreed and {impl_disagreed} of the disagreed are recorded as implemented (never followed up counts as not recorded).",
+   "replace": "{recs_fmt} recommendations issued {years}; of the {responded_fmt} with a recorded response, {agree_share} agreed at publication, {partial_share} partially and {disagree_share} disagreed ({noresp_fmt} printed no response). Among those with a recorded follow-up status, {impl_agreed} of the agreed and {impl_disagreed} of the disagreed are recorded as implemented ({nostatus_fmt} have no follow-up status and are left out)."
+  },
+  {
+   "why": "Rates now use recommendations with a recorded status; the view falls back when fewer than small_n of them match (e.g. BLA alone), so the fallback names that count.",
+   "find": "Only {recs_fmt} recommendations match, too few for stable shares; widen the years or clear a filter.",
+   "replace": "Only {known_fmt} of the {recs_fmt} matching recommendations have a recorded follow-up status, too few for stable shares; widen the years or clear a filter."
+  }
+ ],
+ "audits/commentary/au-time.json": [
+  {
+   "why": "The site now leaves the 651 inferred-implemented CSA rows (upper-bound date only) out of the step curves instead of counting them as never implemented (red team 2).",
+   "find": "The step curves count the 651 CSA recommendations closed by inference (no month count) as never implemented, so CSA curves read low.",
+   "replace": "The 651 CSA recommendations closed by inference (no month count, only a latest possible date) are left out of the step curves rather than counted as never implemented; leaving out these successes can make the affected cohorts read somewhat low at longer horizons."
+  },
+  {
+   "why": "Same change: they are now also missing from the step curves.",
+   "find": "they have no month count, so they are missing from the bars and the histogram.",
+   "replace": "they have no month count, so they are missing from the bars, the histogram and the step curves."
+  }
  ]
 }

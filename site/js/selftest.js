@@ -1,6 +1,7 @@
 /* selftest.js - ?selftest=1
    1. Statistics checks for the pooling code (quantiles, histogram, cumulative incidence with censoring,
-      deflation, null-safe sums, the matched ban-window base rate and that the pooled chance figure is shown nowhere).
+      deflation, null-safe sums, the matched ban-window base rate and that the pooled chance figure is shown nowhere,
+      and that audit rates use the known-status denominator).
    2. For every dashboard view: renders it with default filters, then sets each filter the view
       declares (one at a time) and checks that the view's numbers change AND the "Data on this page"
       strip changes (record counts; for Real/Nominal, the units item). Checks that every dashboard
@@ -63,6 +64,37 @@
         if (staleRe) { const m = txtNoAxis.match(staleRe); add('stats', `${vid}: the pooled chance figure (${stale[0]}) appears nowhere on the page (axis ticks aside)`, !m, m ? `found "${txtNoAxis.slice(Math.max(0, m.index - 60), m.index + 10)}"` : ''); }
       }
     } catch (e) { add('stats', 'ban-window base rate', true, `skipped: ${e.message}`); }
+  }
+
+  async function auDenominatorCheck() {
+    // Audit rates use recommendations with a recorded follow-up status as the denominator (as the module's findings do:
+    // CSA 3,244 of 3,385, Grand Jury 1,479 of 3,420), never all rows; the no-status count is shown beside them.
+    if (!M.METAS.au || !M.au) return;
+    try {
+      const rows = (await M.data.load('audits/recs/recs.json')).rows, F = M.stats.fmt;
+      for (const src of [null, 'csa', 'cgj']) {
+        const sel = rows.filter((r) => !src || r.source === src), known = sel.filter((r) => r.status !== 'unknown'), impl = sel.filter((r) => r.status === 'implemented').length;
+        const want = F.pct(known.length ? impl / known.length : null), allRows = F.pct(sel.length ? impl / sel.length : null), tag = src ? `source=${src}` : 'unfiltered';
+        const p = defaults('au-overview'); if (src) p.source = [src];
+        await show(p);
+        const sl = (M.app.lastView || {}).slots || {}, tile = [...document.querySelectorAll('#content .tile')].find((t) => /Implemented/.test(t.querySelector('.tile-label').textContent));
+        const tv = tile ? tile.querySelector('.tile-value').textContent : '', tf = tile ? tile.querySelector('.tile-foot').textContent : '', live = (document.querySelector('#content .live-slot') || {}).textContent || '';
+        add('stats', `au-overview (${tag}): Implemented tile, slot and live sentence use the known-status denominator (${impl} of ${known.length} = ${want}, not ${allRows} of all rows)`,
+          sl.impl_share === want && tv === want && sl.known === known.length && sl.nostatus === sel.length - known.length && tf.includes(F.int(known.length)) && tf.includes(F.int(sel.length - known.length)) && live.includes(want) && live.includes(F.int(sel.length - known.length)),
+          `slot ${sl.impl_share}, tile "${tv}" / "${tf}", live has share: ${live.includes(want)}`);
+        if (!src) {
+          const ag = known.filter((r) => r.agreed === 'agree'), wantAg = F.pct(ag.length ? ag.filter((r) => r.status === 'implemented').length / ag.length : null);
+          const resp = sel.filter((r) => r.agreed !== 'none'), wantShare = F.pct(resp.length ? resp.filter((r) => r.agreed === 'agree').length / resp.length : null);
+          await show(defaults('au-agreement'));
+          const s2 = (M.app.lastView || {}).slots || {}, live2 = (document.querySelector('#content .live-slot') || {}).textContent || '';
+          add('stats', `au-agreement: impl_agreed over known status (${wantAg}) and agree_share over recorded responses (${wantShare})`, s2.impl_agreed === wantAg && s2.agree_share === wantShare && live2.includes(wantAg), `impl_agreed ${s2.impl_agreed}, agree_share ${s2.agree_share}`);
+          const wantNi = F.pct(known.length ? known.filter((r) => r.status === 'not_implementing').length / known.length : null);
+          await show(defaults('au-status'));
+          const s3 = (M.app.lastView || {}).slots || {};
+          add('stats', `au-status: shares over known status (will not implement ${wantNi})`, s3.notimpl_share === wantNi && s3.impl_share === want, `notimpl ${s3.notimpl_share}, impl ${s3.impl_share}`);
+        }
+      }
+    } catch (e) { add('stats', 'audit known-status denominator', false, e.message); }
   }
 
 
@@ -201,6 +233,7 @@
     try {
       statsChecks();
       await baseRateCheck();
+      await auDenominatorCheck();
       await viewChecks();
       await keyboardChecks();
       await partitionChecks();
