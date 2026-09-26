@@ -41,6 +41,11 @@ export for real modules unless the bundled chunk is much smaller; on `file://` i
 Per-year production files (`payments/cells_<fy>.json`, `recs/recs_<year>.json`, `flows/flows_<year>.json`,
 `spending/cells_<fy>.json`, `measures/values_<fy>.json`) are merged automatically.
 
+Commentary callouts (`annotations[]`) are drawn on these chart ids: `np_trend` (np-overview, np-flows),
+`pf_trend` (pf-overview, pf-spending), `pf_ot` (pf-staffing), `au_issued` (au-overview), `au_impl`
+(au-status), `nw_dollars` (nw-overview), `nw_behested` (nw-behested); `x` is the category (fiscal or
+calendar year) and `series` optionally picks a line. The bundler warns about any other id.
+
 Rerun the bundler whenever a module re-exports. Site-level commentary (home, search, methods, entity
 pages) lives in `site/content/commentary/`.
 

@@ -3,7 +3,9 @@
 Each module lists its logical files (paths relative to <module>/data/site/). A file spec has:
   arrays   {array_key: {field: type}}   row arrays and the fields every row must carry
   keys     {key: type}                  required top-level keys (besides the arrays)
-  split    glob for the production per-year split (merged into one logical file)
+  split    glob for the production per-year (or size) split; the base file and every split part are
+           merged into one logical file and rows are de-duplicated on `key` (a size-limited base file
+           plus a complete split, as the nonprofits export ships, yields the complete set)
   enums    {"array.field": "dim:<dimension>" | "a|b|c" | "ref:<file>#<array>.<field>"}
   optional True when a missing file is not an error (the UI copes without it)
   bundle_drop {array_key: [fields]} long text fields the site never shows; left out of the bundle only
@@ -40,6 +42,10 @@ TEMPLATE_IDS = {
     "nw-overview": ["ov"], "nw-graph": ["graph"], "nw-ban": ["ban"], "nw-behested": ["beh"], "nw-lobby": ["lob"], "nw-concentration": ["conc"], "nw-loop": ["loop"],
 }
 
+# Charts that draw commentary callouts (annotations[].chart), per view.
+CHART_IDS = {"np-overview": ["np_trend"], "np-flows": ["np_trend"], "pf-overview": ["pf_trend"], "pf-spending": ["pf_trend"], "pf-staffing": ["pf_ot"],
+             "au-overview": ["au_issued"], "au-status": ["au_impl"], "nw-overview": ["nw_dollars"], "nw-behested": ["nw_behested"]}
+
 DIM_SHAPE = {"label": "~str", "values": "list"}
 
 SPEC = {
@@ -57,16 +63,19 @@ SPEC = {
             "unique": "orgs.id",
         },
         "payments/cells.json": {
-            "split": "payments/cells_*.json",
+            "split": "payments/cells_*.json", "key": ["fy", "dept", "org"],
             "arrays": {"cells": {"fy": "int", "dept": "str", "org": "str", "amt": "num", "vouchers": "~int?", "contracts": "~int?"}},
             "enums": {"cells.dept": "dim:dept", "cells.org": "ref:orgs/index.json#orgs.id"},
         },
         "contracts/contracts.json": {
+            # contracts/all_*.json (every contract >= $250k) is deliberately NOT merged: the module's commentary
+            # describes contracts.json, and the text must never disagree with the charts.
             "arrays": {"contracts": {"id": "str", "org": "str", "dept": "str", "title": "~str?", "start": "date", "end": "~date?", "type": "str",
                                      "sole_source": "~bool?", "original_agreed": "num?", "agreed": "num?", "consumed": "~num?", "amendments": "list"}},
             "enums": {"contracts.type": "grant|professional_services|other", "contracts.org": "ref:orgs/index.json#orgs.id", "contracts.dept": "dim:dept"},
         },
         "finances/form990.json": {
+            "split": "finances/form990_*.json", "key": ["org", "fy", "form"],
             "arrays": {"rows": {"org": "str", "fy": "int", "form": "~str?", "total_revenue": "num?", "total_expenses": "num?", "gov_grants": "~num?",
                                 "program_share": "~num?", "net_assets": "~num?", "unrestricted_net_assets": "~num?", "months_reserves": "num?",
                                 "employees": "~int?", "exec_comp": "num?", "exec_title": "~str?"}},
@@ -88,7 +97,7 @@ SPEC = {
             "dims": DIMS["performance"],
         },
         "spending/cells.json": {
-            "split": "spending/cells_*.json",
+            "split": "spending/cells_*.json", "key": ["fy", "dept", "fund", "char"],
             "arrays": {"cells": {"fy": "int", "dept": "str", "fund": "~str?", "char": "str", "budget": "num?", "revised": "~num?", "actual": "num?"}},
             "enums": {"cells.dept": "dim:dept", "cells.char": "dim:char"},
         },
@@ -105,7 +114,7 @@ SPEC = {
             "unique": "measures.id",
         },
         "measures/values.json": {
-            "split": "measures/values_*.json",
+            "split": "measures/values_*.json", "key": ["measure", "fy"],
             "arrays": {"rows": {"measure": "str", "fy": "int", "target": "num?", "actual": "num?", "met": "bool?", "target_change": "~str?",
                                 "source_doc": "~str?", "program_cost": "~num?", "cost_per_unit": "~num?"}},
             "enums": {"rows.measure": "ref:measures/measures.json#measures.id", "rows.target_change": "easier|harder|same|new"},
@@ -126,7 +135,7 @@ SPEC = {
             "unique": "reports.id",
         },
         "recs/recs.json": {
-            "split": "recs/recs_*.json",
+            "split": "recs/recs_*.json", "key": ["id"],
             "arrays": {"rows": {"id": "str", "report": "str", "source": "str", "dept": "str", "date_issued": "date", "topic": "str", "priority": "~str?",
                                 "text": "str", "agreed": "str", "response_text": "~str?", "status": "str", "status_date": "~date?",
                                 "months_to_close": "num?", "last_followup": "~date?", "repeat_of": "~str?", "dollars_at_stake": "~num?", "consequence": "dict"}},
@@ -150,7 +159,7 @@ SPEC = {
             "row_rules": ["no_addresses"],
         },
         "flows.json": {
-            "split": "flows/flows_*.json",
+            "split": "flows/flows_*.json", "key": ["id"],
             "arrays": {"flows": {"id": "str", "from": "str", "to": "str", "type": "str", "date": "date", "amount": "num?", "count": "~int?"}},
             "enums": {"flows.type": "dim:flow", "flows.from": "ref:entities.json#entities.id", "flows.to": "ref:entities.json#entities.id"},
             "row_rules": ["no_addresses"],

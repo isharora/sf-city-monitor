@@ -1,213 +1,296 @@
 {
- "generated_at": "2026-09-26T07:56:21",
+ "generated_at": "2026-09-26T08:03:16",
  "tool": "site/tools/bundle.py",
  "chunk_limit": 380000,
  "modules": {
   "np": {
    "module": "nonprofits",
    "dash": "np",
-   "source": "sample",
-   "reason": "no meta.json in nonprofits/data/site/ (other JSON files exist there, not in the contract layout)",
-   "root": "../design/prototype/sample-data/nonprofits",
+   "source": "real",
+   "reason": null,
+   "root": "../nonprofits/data/site",
    "nested_layout": false,
    "files": {
     "nonprofits/meta.json": {
      "status": "ok",
-     "bytes": 4216,
-     "raw": [],
-     "sample": true,
+     "bytes": 22325,
+     "raw": [
+      "../nonprofits/data/site/meta.json"
+     ],
+     "sample": false,
      "optional": false,
      "errors": [],
      "warnings": [],
      "notes": [],
      "rows": 0,
+     "repaired": false,
      "chunks": [
       "data/nonprofits/meta.0.js"
      ],
      "split_key": null,
-     "chunk_bytes": 4195
+     "chunk_bytes": 20049
     },
     "nonprofits/orgs/index.json": {
      "status": "ok",
-     "bytes": 59086,
-     "raw": [],
-     "sample": true,
+     "bytes": 423646,
+     "raw": [
+      "../nonprofits/data/site/orgs/index.json"
+     ],
+     "sample": false,
      "optional": false,
      "errors": [],
-     "warnings": [],
+     "warnings": [
+      "1 file(s) over the contract's 400 KB (largest 424 KB: index.json); bundled in chunks"
+     ],
      "notes": [],
-     "rows": 220,
+     "rows": 1512,
+     "repaired": false,
      "chunks": [
       "data/nonprofits/orgs/index.0.js"
      ],
      "split_key": null,
-     "chunk_bytes": 59137
+     "chunk_bytes": 246966
     },
     "nonprofits/payments/cells.json": {
      "status": "ok",
-     "bytes": 246232,
-     "raw": [],
-     "sample": true,
+     "bytes": 2995602,
+     "raw": [
+      "../nonprofits/data/site/payments/cells_2007.json",
+      "../nonprofits/data/site/payments/cells_2008.json",
+      "../nonprofits/data/site/payments/cells_2009.json",
+      "../nonprofits/data/site/payments/cells_2010.json",
+      "../nonprofits/data/site/payments/cells_2011.json",
+      "../nonprofits/data/site/payments/cells_2012.json",
+      "../nonprofits/data/site/payments/cells_2013.json",
+      "../nonprofits/data/site/payments/cells_2014.json",
+      "../nonprofits/data/site/payments/cells_2015.json",
+      "../nonprofits/data/site/payments/cells_2016.json",
+      "../nonprofits/data/site/payments/cells_2017.json",
+      "../nonprofits/data/site/payments/cells_2018.json",
+      "../nonprofits/data/site/payments/cells_2019.json",
+      "../nonprofits/data/site/payments/cells_2020.json",
+      "../nonprofits/data/site/payments/cells_2021.json",
+      "../nonprofits/data/site/payments/cells_2022.json",
+      "../nonprofits/data/site/payments/cells_2023.json",
+      "../nonprofits/data/site/payments/cells_2024.json",
+      "../nonprofits/data/site/payments/cells_2025.json",
+      "../nonprofits/data/site/payments/cells_2026.json"
+     ],
+     "sample": false,
      "optional": false,
      "errors": [],
      "warnings": [],
-     "notes": [],
-     "rows": 2996,
-     "chunks": [
-      "data/nonprofits/payments/cells.0.js"
+     "notes": [
+      "merged 20 files (cells_2007.json + 19 parts); 0 duplicate rows dropped on (fy, dept, org)"
      ],
-     "split_key": null,
-     "chunk_bytes": 105578
+     "rows": 34568,
+     "repaired": false,
+     "chunks": [
+      "data/nonprofits/payments/cells.0.js",
+      "data/nonprofits/payments/cells.1.js",
+      "data/nonprofits/payments/cells.2.js"
+     ],
+     "split_key": "cells",
+     "chunk_bytes": 986507
     },
     "nonprofits/contracts/contracts.json": {
      "status": "ok",
-     "bytes": 189972,
-     "raw": [],
-     "sample": true,
+     "bytes": 349029,
+     "raw": [
+      "../nonprofits/data/site/contracts/contracts.json"
+     ],
+     "sample": false,
      "optional": false,
      "errors": [],
-     "warnings": [],
+     "warnings": [
+      "contracts.dept: 6 values not in meta.dimensions.dept (e.g. \"Unm\")"
+     ],
      "notes": [],
-     "rows": 606,
+     "rows": 974,
+     "repaired": false,
      "chunks": [
       "data/nonprofits/contracts/contracts.0.js"
      ],
      "split_key": null,
-     "chunk_bytes": 81318
+     "chunk_bytes": 156678
     },
     "nonprofits/finances/form990.json": {
      "status": "ok",
-     "bytes": 569289,
-     "raw": [],
-     "sample": true,
+     "bytes": 4848511,
+     "raw": [
+      "../nonprofits/data/site/finances/form990.json",
+      "../nonprofits/data/site/finances/form990_2011.json",
+      "../nonprofits/data/site/finances/form990_2012.json",
+      "../nonprofits/data/site/finances/form990_2013.json",
+      "../nonprofits/data/site/finances/form990_2014.json",
+      "../nonprofits/data/site/finances/form990_2015.json",
+      "../nonprofits/data/site/finances/form990_2016.json",
+      "../nonprofits/data/site/finances/form990_2017.json",
+      "../nonprofits/data/site/finances/form990_2018.json",
+      "../nonprofits/data/site/finances/form990_2019.json",
+      "../nonprofits/data/site/finances/form990_2020.json",
+      "../nonprofits/data/site/finances/form990_2021.json",
+      "../nonprofits/data/site/finances/form990_2022.json",
+      "../nonprofits/data/site/finances/form990_2023.json",
+      "../nonprofits/data/site/finances/form990_2024.json",
+      "../nonprofits/data/site/finances/form990_2025.json",
+      "../nonprofits/data/site/finances/form990_2026.json"
+     ],
+     "sample": false,
      "optional": false,
      "errors": [],
      "warnings": [],
-     "notes": [],
-     "rows": 1820,
-     "chunks": [
-      "data/nonprofits/finances/form990.0.js"
+     "notes": [
+      "merged 17 files (form990.json + 16 parts); 1018 duplicate rows dropped on (org, fy, form)"
      ],
-     "split_key": null,
-     "chunk_bytes": 157296
+     "rows": 13856,
+     "repaired": false,
+     "chunks": [
+      "data/nonprofits/finances/form990.0.js",
+      "data/nonprofits/finances/form990.1.js",
+      "data/nonprofits/finances/form990.2.js",
+      "data/nonprofits/finances/form990.3.js",
+      "data/nonprofits/finances/form990.4.js"
+     ],
+     "split_key": "rows",
+     "chunk_bytes": 1570440
     },
     "nonprofits/reviews/findings.json": {
      "status": "ok",
-     "bytes": 194066,
-     "raw": [],
-     "sample": true,
+     "bytes": 350794,
+     "raw": [
+      "../nonprofits/data/site/reviews/findings.json"
+     ],
+     "sample": false,
      "optional": false,
      "errors": [],
      "warnings": [],
      "notes": [],
-     "rows": 680,
+     "rows": 775,
+     "repaired": false,
      "chunks": [
       "data/nonprofits/reviews/findings.0.js"
      ],
      "split_key": null,
-     "chunk_bytes": 122624
+     "chunk_bytes": 252727
     }
    },
    "commentary": {
     "nonprofits/commentary/np-overview.json": {
      "status": "ok",
-     "bytes": 1954,
-     "raw": [],
-     "sample": true,
+     "bytes": 2540,
+     "raw": [
+      "../nonprofits/data/site/commentary/np-overview.json"
+     ],
+     "sample": false,
      "errors": [],
      "warnings": [],
      "chunks": [
       "data/nonprofits/commentary/np-overview.0.js"
      ],
-     "chunk_bytes": 2017
+     "chunk_bytes": 2434
     },
     "nonprofits/commentary/np-flows.json": {
      "status": "ok",
-     "bytes": 1345,
-     "raw": [],
-     "sample": true,
+     "bytes": 2003,
+     "raw": [
+      "../nonprofits/data/site/commentary/np-flows.json"
+     ],
+     "sample": false,
      "errors": [],
      "warnings": [],
      "chunks": [
       "data/nonprofits/commentary/np-flows.0.js"
      ],
-     "chunk_bytes": 1405
+     "chunk_bytes": 1916
     },
     "nonprofits/commentary/np-dependency.json": {
      "status": "ok",
-     "bytes": 1390,
-     "raw": [],
-     "sample": true,
+     "bytes": 1995,
+     "raw": [
+      "../nonprofits/data/site/commentary/np-dependency.json"
+     ],
+     "sample": false,
      "errors": [],
      "warnings": [],
      "chunks": [
       "data/nonprofits/commentary/np-dependency.0.js"
      ],
-     "chunk_bytes": 1455
+     "chunk_bytes": 1941
     },
     "nonprofits/commentary/np-pay.json": {
      "status": "ok",
-     "bytes": 1516,
-     "raw": [],
-     "sample": true,
+     "bytes": 1815,
+     "raw": [
+      "../nonprofits/data/site/commentary/np-pay.json"
+     ],
+     "sample": false,
      "errors": [],
      "warnings": [],
      "chunks": [
       "data/nonprofits/commentary/np-pay.0.js"
      ],
-     "chunk_bytes": 1574
+     "chunk_bytes": 1757
     },
     "nonprofits/commentary/np-growth.json": {
      "status": "ok",
-     "bytes": 1303,
-     "raw": [],
-     "sample": true,
+     "bytes": 2024,
+     "raw": [
+      "../nonprofits/data/site/commentary/np-growth.json"
+     ],
+     "sample": false,
      "errors": [],
      "warnings": [],
      "chunks": [
       "data/nonprofits/commentary/np-growth.0.js"
      ],
-     "chunk_bytes": 1364
+     "chunk_bytes": 1969
     },
     "nonprofits/commentary/np-reviews.json": {
      "status": "ok",
-     "bytes": 1258,
-     "raw": [],
-     "sample": true,
+     "bytes": 1757,
+     "raw": [
+      "../nonprofits/data/site/commentary/np-reviews.json"
+     ],
+     "sample": false,
      "errors": [],
      "warnings": [],
      "chunks": [
       "data/nonprofits/commentary/np-reviews.0.js"
      ],
-     "chunk_bytes": 1320
+     "chunk_bytes": 1703
     },
     "nonprofits/commentary/np-orgs.json": {
      "status": "ok",
-     "bytes": 386,
-     "raw": [],
-     "sample": true,
+     "bytes": 770,
+     "raw": [
+      "../nonprofits/data/site/commentary/np-orgs.json"
+     ],
+     "sample": false,
      "errors": [],
      "warnings": [],
      "chunks": [
       "data/nonprofits/commentary/np-orgs.0.js"
      ],
-     "chunk_bytes": 445
+     "chunk_bytes": 773
     },
     "nonprofits/commentary/story_np.json": {
      "status": "ok",
-     "bytes": 1339,
-     "raw": [],
-     "sample": true,
+     "bytes": 1271,
+     "raw": [
+      "../nonprofits/data/site/commentary/story_np.json"
+     ],
+     "sample": false,
      "errors": [],
      "warnings": [],
      "chunks": [
       "data/nonprofits/commentary/story_np.0.js"
      ],
-     "chunk_bytes": 1413
+     "chunk_bytes": 1112
     }
    },
-   "as_of": "2026-09-20",
-   "sample_meta": true
+   "as_of": "2026-09-21",
+   "sample_meta": false
   },
   "pf": {
    "module": "performance",
@@ -229,6 +312,7 @@
      "warnings": [],
      "notes": [],
      "rows": 0,
+     "repaired": false,
      "chunks": [
       "data/performance/meta.0.js"
      ],
@@ -237,24 +321,28 @@
     },
     "performance/spending/cells.json": {
      "status": "ok",
-     "bytes": 874522,
+     "bytes": 1310764,
      "raw": [
-      "../performance/data/site/spending/cells.json"
+      "../performance/data/site/spending/cells.json",
+      "../performance/data/site/spending/cells_pre2010.json"
      ],
      "sample": false,
      "optional": false,
      "errors": [],
      "warnings": [
-      "875 KB in one file; the contract asks for per-year files (spending/cells_*.json)"
+      "2 file(s) over the contract's 400 KB (largest 875 KB: cells.json); bundled in chunks"
      ],
-     "notes": [],
-     "rows": 8399,
+     "notes": [
+      "merged 2 files (cells.json + 1 parts); 0 duplicate rows dropped on (fy, dept, fund, char)"
+     ],
+     "rows": 12688,
+     "repaired": false,
      "chunks": [
       "data/performance/spending/cells.0.js",
       "data/performance/spending/cells.1.js"
      ],
      "split_key": "cells",
-     "chunk_bytes": 389761
+     "chunk_bytes": 578295
     },
     "performance/staffing/cells.json": {
      "status": "ok",
@@ -268,6 +356,7 @@
      "warnings": [],
      "notes": [],
      "rows": 714,
+     "repaired": false,
      "chunks": [
       "data/performance/staffing/cells.0.js"
      ],
@@ -284,12 +373,13 @@
      "optional": false,
      "errors": [],
      "warnings": [
-      "1915 KB exceeds the contract's 400 KB per file; bundled in chunks"
+      "1 file(s) over the contract's 400 KB (largest 1915 KB: measures.json); bundled in chunks"
      ],
      "notes": [
       "bundle omits unused fields: description, goal, kind_detail, mapping, report_years, service_area"
      ],
      "rows": 3413,
+     "repaired": false,
      "chunks": [
       "data/performance/measures/measures.0.js",
       "data/performance/measures/measures.1.js"
@@ -307,10 +397,11 @@
      "optional": false,
      "errors": [],
      "warnings": [
-      "4948 KB in one file; the contract asks for per-year files (measures/values_*.json)"
+      "1 file(s) over the contract's 400 KB (largest 4948 KB: values.json); the contract suggests per-year files (measures/values_*.json); bundled in chunks"
      ],
      "notes": [],
      "rows": 28684,
+     "repaired": false,
      "chunks": [
       "data/performance/measures/values.0.js",
       "data/performance/measures/values.1.js",
@@ -334,6 +425,7 @@
      "warnings": [],
      "notes": [],
      "rows": 9,
+     "repaired": false,
      "chunks": [
       "data/performance/measures/cost_links.0.js"
      ],
@@ -490,6 +582,7 @@
      "warnings": [],
      "notes": [],
      "rows": 0,
+     "repaired": false,
      "chunks": [
       "data/audits/meta.0.js"
      ],
@@ -506,6 +599,7 @@
      "warnings": [],
      "notes": [],
      "rows": 175,
+     "repaired": false,
      "chunks": [
       "data/audits/reports/reports.0.js"
      ],
@@ -522,6 +616,7 @@
      "warnings": [],
      "notes": [],
      "rows": 1860,
+     "repaired": false,
      "chunks": [
       "data/audits/recs/recs.0.js",
       "data/audits/recs/recs.1.js"
@@ -649,6 +744,7 @@
      "warnings": [],
      "notes": [],
      "rows": 0,
+     "repaired": false,
      "chunks": [
       "data/network/meta.0.js"
      ],
@@ -665,6 +761,7 @@
      "warnings": [],
      "notes": [],
      "rows": 156,
+     "repaired": false,
      "chunks": [
       "data/network/entities.0.js"
      ],
@@ -681,6 +778,7 @@
      "warnings": [],
      "notes": [],
      "rows": 1730,
+     "repaired": false,
      "chunks": [
       "data/network/flows.0.js"
      ],
@@ -697,6 +795,7 @@
      "warnings": [],
      "notes": [],
      "rows": 160,
+     "repaired": false,
      "chunks": [
       "data/network/analyses/ban_window.0.js"
      ],
@@ -713,6 +812,7 @@
      "warnings": [],
      "notes": [],
      "rows": 140,
+     "repaired": false,
      "chunks": [
       "data/network/analyses/behested.0.js"
      ],
@@ -729,6 +829,7 @@
      "warnings": [],
      "notes": [],
      "rows": 329,
+     "repaired": false,
      "chunks": [
       "data/network/analyses/lobbying.0.js"
      ],
@@ -745,6 +846,7 @@
      "warnings": [],
      "notes": [],
      "rows": 26,
+     "repaired": false,
      "chunks": [
       "data/network/analyses/concentration.0.js"
      ],
@@ -761,6 +863,7 @@
      "warnings": [],
      "notes": [],
      "rows": 38,
+     "repaired": false,
      "chunks": [
       "data/network/analyses/loop.0.js"
      ],
@@ -885,7 +988,7 @@
  "site": {
   "site/site.json": {
    "status": "ok",
-   "bytes": 9230,
+   "bytes": 9935,
    "chunks": [
     "data/site/site.0.js"
    ],

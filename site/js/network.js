@@ -35,7 +35,7 @@
   function graph(el, o) {
     el.innerHTML = '';
     const width = Math.max(600, el.getBoundingClientRect().width || 900), height = o.height || 620;
-    const svg = svgEl('svg', { viewBox: `0 0 ${width} ${height}`, role: 'img' }, el);
+    const svg = svgEl('svg', { viewBox: `0 0 ${width} ${height}`, role: 'group', 'aria-label': (o.aria || 'Network graph') + '. Tab to nodes and edges; Enter focuses a node.' }, el);
     const t = svgEl('title', {}, svg); t.textContent = o.aria || 'Network of entities and money flows';
     // aggregate edges by pair (undirected for layout, directed for display)
     const pair = new Map();
@@ -84,7 +84,7 @@
       if (n.e.type === 'individuals') svgEl('circle', { cx: p.x, cy: p.y, r: Math.max(1, n.r - 3), style: 'fill:none;stroke:var(--surface-1);stroke-width:1.5;stroke-dasharray:3 2' }, g);
       if (labelSet.has(n.id)) text(g, p.x, p.y - n.r - 4, M.charts.truncate(n.e.name, 28), 'nw-label', { 'text-anchor': 'middle' });
       hover(g, (e) => showTip(e, n.e.name, [{ key: `var(--c-${n.e.type}, var(--neutral))`, label: o.typeLabel ? o.typeLabel(n.e.type) : n.e.type, value: '' }, { label: 'connected dollars (shown edges)', value: fmt().money(nodeW.get(n.id)), muted: true }, ...(n.e.count ? [{ label: 'individuals aggregated', value: fmt().int(n.e.count), muted: true }] : []), { label: '', value: 'Click to focus; open profile in the side panel', muted: true }], e.clientX == null ? centerOf(g) : null));
-      g.addEventListener('click', () => o.onSelect && o.onSelect(n.id)); g.addEventListener('keydown', (e) => { if (e.key === 'Enter') o.onSelect && o.onSelect(n.id); });
+      g.addEventListener('click', () => o.onSelect && o.onSelect(n.id)); g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (o.onSelect) o.onSelect(n.id); } });
     }
     const rows = list.map((p) => [(o.entities.get(p.a) || {}).name || p.a, (o.entities.get(p.b) || {}).name || p.b, [...p.types].join(', '), p.amount ? fmt().money(p.amount) : '–', fmt().int(p.count)]);
     return { table: { head: ['From', 'To', 'Flow types', 'Amount', 'Records'], rows }, nodes: nodes.length, edges: list.length, hidden, total: list.reduce((a, p) => a + p.amount, 0), neighbors };

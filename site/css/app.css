@@ -428,3 +428,9 @@ a.dash-card:hover h2 { text-decoration: underline; text-decoration-color: var(--
 .view-tools .muted { color: var(--text-muted); font-size: 12.5px; }
 .data-table .muted-sub { color: var(--text-muted); font-size: 11.5px; white-space: nowrap; }
 .data-table td.nowrap { white-space: nowrap; }
+/* keyboard focus on chart marks: SVG groups do not draw outlines reliably, so highlight the hit area */
+svg g[tabindex]:focus { outline: none; }
+svg g[tabindex]:focus-visible .hit, svg g[tabindex]:focus-visible > rect.hit, svg g[tabindex]:focus-visible > circle.hit { fill: var(--focus); fill-opacity: .12; stroke: var(--focus); stroke-width: 2; }
+svg g.nw-node:focus-visible circle:first-child { stroke: var(--focus); stroke-width: 3; }
+svg path.nw-edge:focus-visible { stroke: var(--focus) !important; opacity: 1 !important; }
+svg rect.hit:focus-visible { fill: var(--focus); fill-opacity: .08; }

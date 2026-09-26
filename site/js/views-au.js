@@ -40,11 +40,11 @@
       const sources = ctx.meta.dimensions.source.values.filter((s) => inList(sc.st.source, s.id)), statuses = ctx.meta.dimensions.status.values;
       ctx.card({ title: 'Status by who recommended', sub: 'Share of recommendations at each status', span: 6, render(el) {
         if (!recs.length) return ctx.empty(el, 'No recommendations match', 'Widen the years or clear a filter.');
-        return C.stackedBars(el, { horizontal: true, percent: true, categories: sources.map((s) => s.label), series: statuses.map((s) => ({ id: s.id, label: s.label.replace(/ \(.*/, ''), color: STATUS_COLOR[s.id], values: sources.map((src) => recs.filter((r) => r.source === src.id && r.status === s.id).length) })), n: sources.map((src) => recs.filter((r) => r.source === src.id).length), nHead: 'recommendations', rawFormat: (v) => `${fmt.int(v)} recs`, labelWidth: 210, aria: 'Status by source' });
+        return C.stackedBars(el, { horizontal: true, percent: true, categories: sources.map((s) => s.label), series: statuses.map((s) => ({ id: s.id, label: s.label.replace(/ \(.*/, ''), color: STATUS_COLOR[s.id], values: sources.map((src) => recs.filter((r) => r.source === src.id && r.status === s.id).length) })), n: sources.map((src) => recs.filter((r) => r.source === src.id).length), small: sources.map((src) => recs.filter((r) => r.source === src.id).length < ctx.meta.small_n), nHead: 'recommendations', rawFormat: (v) => `${fmt.int(v)} recs`, labelWidth: 210, aria: 'Status by source' });
       }, note: 'Grey “closed without implementation” is neither success nor failure (superseded or no longer applicable). Red is a department’s decision not to implement.' });
       ctx.card({ title: 'Recommendations issued by year', sub: 'By source; click a column to filter the years', span: 6, render(el) {
         const years = ctx.yearList(); if (!recs.length) return ctx.empty(el, 'No recommendations match');
-        return C.stackedBars(el, { categories: years, series: sources.map((s) => ({ id: s.id, label: s.short, color: SRC_COLOR(s.id), values: years.map((y) => recs.filter((r) => r.source === s.id && +r.date_issued.slice(0, 4) === y).length) })), format: (v) => fmt.int(v), yTitle: 'Recommendations', onClick: (i) => M.state.set({ years: [years[i], years[i]] }), aria: 'Issued by year' });
+        return C.stackedBars(el, { categories: years, series: sources.map((s) => ({ id: s.id, label: s.short, color: SRC_COLOR(s.id), values: years.map((y) => recs.filter((r) => r.source === s.id && +r.date_issued.slice(0, 4) === y).length) })), format: (v) => fmt.int(v), yTitle: 'Recommendations', onClick: (i) => M.state.set({ years: [years[i], years[i]] }), annotations: M.commentary.annotationsFor(ctx.commentary, 'au_issued'), aria: 'Issued by year' });
       } });
     },
   };
@@ -66,12 +66,12 @@
       ctx.card({ title: 'Status by topic', sub: 'What kinds of recommendations get done', span: 6, render(el) {
         const topics = ctx.meta.dimensions.topic.values.filter((t) => recs.some((r) => r.topic === t.id));
         if (!topics.length) return ctx.empty(el, 'No recommendations match');
-        return C.stackedBars(el, { horizontal: true, percent: true, categories: topics.map((t) => t.label), series: statuses.map((s) => ({ id: s.id, label: s.label.replace(/ \(.*/, ''), color: STATUS_COLOR[s.id], values: topics.map((t) => recs.filter((r) => r.topic === t.id && r.status === s.id).length) })), n: topics.map((t) => recs.filter((r) => r.topic === t.id).length), nHead: 'recommendations', rawFormat: (v) => `${fmt.int(v)} recs`, labelWidth: 200, rowH: 24, aria: 'Status by topic' });
+        return C.stackedBars(el, { horizontal: true, percent: true, categories: topics.map((t) => t.label), series: statuses.map((s) => ({ id: s.id, label: s.label.replace(/ \(.*/, ''), color: STATUS_COLOR[s.id], values: topics.map((t) => recs.filter((r) => r.topic === t.id && r.status === s.id).length) })), n: topics.map((t) => recs.filter((r) => r.topic === t.id).length), small: topics.map((t) => recs.filter((r) => r.topic === t.id).length < ctx.meta.small_n), nHead: 'recommendations', rawFormat: (v) => `${fmt.int(v)} recs`, labelWidth: 200, rowH: 24, aria: 'Status by topic' });
       } });
       ctx.card({ title: 'Implemented share by year issued', sub: 'Recent years are naturally lower: less time has passed', span: 6, render(el) {
         const years = ctx.yearList(), sources = ctx.meta.dimensions.source.values.filter((s) => inList(sc.st.source, s.id));
         if (!recs.length) return ctx.empty(el, 'No recommendations match');
-        return C.lines(el, { x: years, series: sources.map((s) => ({ id: s.id, label: s.short, color: SRC_COLOR(s.id), values: years.map((y) => { const rows = recs.filter((r) => r.source === s.id && +r.date_issued.slice(0, 4) === y); return rows.length >= ctx.meta.small_n ? rows.filter((r) => r.status === 'implemented').length / rows.length : null; }) })), format: (v) => fmt.pct(v), maxY: 1, yTitle: 'Implemented', aria: 'Implemented by year' });
+        return C.lines(el, { x: years, series: sources.map((s) => ({ id: s.id, label: s.short, color: SRC_COLOR(s.id), values: years.map((y) => { const rows = recs.filter((r) => r.source === s.id && +r.date_issued.slice(0, 4) === y); return rows.length >= ctx.meta.small_n ? rows.filter((r) => r.status === 'implemented').length / rows.length : null; }) })), format: (v) => fmt.pct(v), maxY: 1, yTitle: 'Implemented', annotations: M.commentary.annotationsFor(ctx.commentary, 'au_impl'), aria: 'Implemented by year' });
       }, note: `Years with fewer than ${ctx.meta.small_n} recommendations from a source are left blank.` });
     },
   };
@@ -120,7 +120,7 @@
       const sources = ctx.meta.dimensions.source.values.filter((s) => inList(sc.st.source, s.id));
       ctx.card({ title: 'Response by recommender', sub: 'Blue agrees, red disagrees, grey is partial or none', span: 6, render(el) {
         if (!recs.length) return ctx.empty(el, 'No recommendations match');
-        return C.stackedBars(el, { horizontal: true, percent: true, categories: sources.map((s) => s.label), series: agrees.map((a) => ({ id: a.id, label: a.label, color: AGREE_COLOR[a.id], values: sources.map((s) => recs.filter((r) => r.source === s.id && r.agreed === a.id).length) })), n: sources.map((s) => recs.filter((r) => r.source === s.id).length), nHead: 'recommendations', rawFormat: (v) => `${fmt.int(v)} recs`, labelWidth: 210, aria: 'Agreement by source' });
+        return C.stackedBars(el, { horizontal: true, percent: true, categories: sources.map((s) => s.label), series: agrees.map((a) => ({ id: a.id, label: a.label, color: AGREE_COLOR[a.id], values: sources.map((s) => recs.filter((r) => r.source === s.id && r.agreed === a.id).length) })), n: sources.map((s) => recs.filter((r) => r.source === s.id).length), small: sources.map((s) => recs.filter((r) => r.source === s.id).length < ctx.meta.small_n), nHead: 'recommendations', rawFormat: (v) => `${fmt.int(v)} recs`, labelWidth: 210, aria: 'Agreement by source' });
       } });
       ctx.card({ title: 'Response × status', sub: 'Share of each response row at each status', span: 6, render(el) {
         if (!recs.length) return ctx.empty(el, 'No recommendations match');

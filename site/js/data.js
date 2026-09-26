@@ -93,7 +93,7 @@
       if (e.status !== 'ok') throw new DataError(logical, e.status, e.errors);
       let data = null, via = 'chunks';
       const me = modEntry(moduleOf(logical));
-      if (/^https?:$/.test(location.protocol) && e.raw && e.raw.length && me && me.source === 'real' && !M.data.forceChunks && !(e.chunk_bytes && e.chunk_bytes < 0.8 * e.bytes)) {
+      if (/^https?:$/.test(location.protocol) && e.raw && e.raw.length && me && me.source === 'real' && !M.data.forceChunks && !e.repaired && !(e.chunk_bytes && e.chunk_bytes < 0.8 * e.bytes)) {
         try { data = await viaFetch(logical, e); via = 'fetch'; } catch (err) { console.info(`[data] ${logical}: using bundled chunks (${err.message})`); data = null; }
       }
       if (!data) data = await viaChunks(logical, e);

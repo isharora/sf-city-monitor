@@ -144,8 +144,8 @@ def _type_ok(v, t):
         return True
     if t == "str":
         return isinstance(v, str)
-    if t == "int":
-        return isinstance(v, int) and not isinstance(v, bool)
+    if t == "int":  # integral floats (12.0) are accepted; JSON has one number type
+        return (isinstance(v, int) and not isinstance(v, bool)) or (isinstance(v, float) and v.is_integer())
     if t == "num":
         return isinstance(v, (int, float)) and not isinstance(v, bool) and v == v and v not in (float("inf"), float("-inf"))
     if t == "bool":
@@ -200,6 +200,30 @@ def dim_ids(meta, dim):
         return {str(v.get("id")) for v in meta["dimensions"][dim]["values"]}
     except (KeyError, TypeError, AttributeError):
         return None
+
+
+NAN_STRINGS = {"nan", "NaN", "NAN", "None", "none", "null", "NULL", "NaT", ""}
+
+
+def repair_nan_strings(obj, spec, notes):
+    """'nan'/'None'/'' strings in nullable non-text fields (a pandas export artifact the contract forbids)
+    become null, so a handful of rows cannot blank a whole view. Counted in the report as a warning."""
+    fixed = 0
+    for key, fields in spec.get("arrays", {}).items():
+        arr = obj.get(key)
+        if not isinstance(arr, list):
+            continue
+        targets = [f for f, t in fields.items() if t.rstrip("?").lstrip("~") in ("date", "num", "int", "bool") and t.endswith("?")]
+        for r in arr:
+            if not isinstance(r, dict):
+                continue
+            for f in targets:
+                if isinstance(r.get(f), str) and r[f].strip() in NAN_STRINGS:
+                    r[f] = None
+                    fixed += 1
+    if fixed:
+        notes.append(f"REPAIRED {fixed} 'nan'-like strings in nullable fields to null (the contract asks for null; fix in the exporter)")
+    return fixed
 
 
 def validate(module, rel, obj, spec, meta, loaded, real):
@@ -422,6 +446,8 @@ def validate_commentary(view, obj, real):
             rep.err(f"annotations[{i}] needs chart, x, text")
         elif len(a["text"]) > 90:
             rep.warn(f"annotations[{i}] text over 90 characters")
+        if isinstance(a, dict) and a.get("chart") and a["chart"] not in C.CHART_IDS.get(view, []):
+            rep.warn(f"annotations[{i}] chart '{a['chart']}' is not drawn on {view} (drawn: {', '.join(C.CHART_IDS.get(view, [])) or 'none'})")
     text = " ".join([obj.get("headline") or ""] + [p for p in obj.get("paragraphs") or [] if isinstance(p, str)])
     low = text.lower()
     for w in C.FAIRNESS_WORDS:
@@ -446,14 +472,12 @@ def find_real_root(module):
 
 
 def physical_files(root, rel, spec):
+    """The base file (if present) followed by every split part (if any)."""
     p = os.path.join(root, rel)
-    if os.path.isfile(p):
-        return [p]
+    out = [p] if os.path.isfile(p) else []
     if spec.get("split"):
-        parts = sorted(glob.glob(os.path.join(root, spec["split"])))
-        if parts:
-            return parts
-    return []
+        out += [x for x in sorted(glob.glob(os.path.join(root, spec["split"]))) if x != p]
+    return out
 
 
 def read_json(path):
@@ -462,8 +486,8 @@ def read_json(path):
     return json.loads(raw.decode("utf-8")), len(raw)
 
 
-def load_logical(root, rel, spec):
-    """Returns (obj|None, bytes, paths, error)."""
+def load_logical(root, rel, spec, notes=None):
+    """Returns (obj|None, bytes, paths, error). Merges the base file and split parts; de-duplicates rows on spec['key']."""
     paths = physical_files(root, rel, spec)
     if not paths:
         return None, 0, [], "missing"
@@ -480,6 +504,20 @@ def load_logical(root, rel, spec):
             for k, v in (o.items() if isinstance(o, dict) else []):
                 if isinstance(v, list) and isinstance(merged.get(k), list):
                     merged[k].extend(v)
+                elif k not in merged:
+                    merged[k] = v
+    if len(paths) > 1 and spec.get("key") and isinstance(merged, dict):
+        for k, v in merged.items():
+            if isinstance(v, list) and v and isinstance(v[0], dict) and all(f in v[0] for f in spec["key"]):
+                seen, out = set(), []
+                for r in v:
+                    key = tuple(json.dumps(r.get(f)) for f in spec["key"]) if isinstance(r, dict) else None
+                    if key in seen:
+                        continue
+                    seen.add(key); out.append(r)
+                if notes is not None:
+                    notes.append(f"merged {len(paths)} files ({os.path.basename(paths[0])} + {len(paths) - 1} parts); {len(v) - len(out)} duplicate rows dropped on ({', '.join(spec['key'])})")
+                merged[k] = out
     return merged, total, paths, None
 
 
@@ -635,21 +673,22 @@ def bundle_module(module, report_lines, quiet):
     # load referenced files first (orgs, measures, reports, entities) so refs can be checked
     for rel in order:
         spec = spec_all[rel]
-        obj, nbytes, paths, err = load_logical(root, rel, spec)
+        merge_notes = []
+        obj, nbytes, paths, err = load_logical(root, rel, spec, merge_notes)
         logical = f"{module}/{rel}"
         entry = {"status": "missing", "bytes": nbytes, "raw": [rel_to_site(p) for p in paths] if decision == "real" else [],
                  "sample": decision == "sample", "optional": bool(spec.get("optional")), "errors": [], "warnings": [], "notes": [], "rows": 0}
         if err and err != "missing":
             entry.update(status="invalid", errors=[err])
         elif obj is not None:
-            notes = []
+            notes = list(merge_notes)
             obj = normalize(module, rel, obj, notes)
+            repaired = repair_nan_strings(obj, spec, notes)
             rep, rows = validate(module, rel, obj, spec, loaded.get("meta.json"), loaded, decision == "real")
-            entry.update(rows=rows, errors=rep.errors, warnings=rep.warnings, notes=notes)
-            if nbytes > FILE_LIMIT and decision == "real" and not spec.get("split"):
-                entry["warnings"].append(f"{nbytes/1e3:.0f} KB exceeds the contract's 400 KB per file; bundled in chunks")
-            elif nbytes > FILE_LIMIT and decision == "real" and len(paths) == 1:
-                entry["warnings"].append(f"{nbytes/1e3:.0f} KB in one file; the contract asks for per-year files ({spec['split']})")
+            entry.update(rows=rows, errors=rep.errors, warnings=rep.warnings + [n for n in notes if n.startswith("REPAIRED")], notes=[n for n in notes if not n.startswith("REPAIRED")], repaired=bool(repaired))
+            big = [p for p in paths if os.path.getsize(p) > FILE_LIMIT]
+            if big and decision == "real":
+                entry["warnings"].append(f"{len(big)} file(s) over the contract's 400 KB (largest {max(os.path.getsize(p) for p in big)/1e3:.0f} KB: {os.path.basename(max(big, key=os.path.getsize))})" + (f"; the contract suggests per-year files ({spec['split']})" if spec.get("split") and len(paths) == 1 else "") + "; bundled in chunks")
             if rep.errors:
                 entry["status"] = "invalid"
             else:
@@ -727,6 +766,7 @@ def preview_real(module, root):
             continue
         notes = []
         obj = normalize(module, rel, obj, notes)
+        repair_nan_strings(obj, spec, notes)
         if rel == "meta.json":
             meta = obj
         rep, rows = validate(module, rel, obj, spec, meta, loaded, True)

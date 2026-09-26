@@ -31,13 +31,21 @@
     if (ctx.view.filters.includes('real')) ctx.units(ctx.dollars);
     return { st, y0, y1, orgs, byId, org, cells, orgSet, total, areaLabel, sizeLabel, orgLink: (o) => (o.stub ? document.createTextNode(o.name) : ctx.link(o.name, { view: 'org', id: o.id })) };
   }
+  /** Default Form 990 year: the latest selected fiscal year whose filings are reasonably complete (at least 60% of
+      the best-covered year), because the most recent tax years are still being filed. */
+  function default990Fy(ctx, sc) {
+    const cnt = new Map(); for (const r of ctx.data.fin.rows) cnt.set(r.fy, (cnt.get(r.fy) || 0) + 1);
+    const max = Math.max(0, ...cnt.values());
+    for (let y = sc.y1; y >= sc.y0; y--) if ((cnt.get(y) || 0) >= 0.6 * max) return { fy: y, note: y < sc.y1 ? `FY${sc.y1} filings are incomplete (${fmt.int(cnt.get(sc.y1) || 0)} so far vs ${fmt.int(max)} in the best-covered year), so FY${y} is shown by default; pick another year above.` : null };
+    return { fy: sc.y1, note: null };
+  }
   const byOrgTotal = (sc, ctx) => { const m = new Map(); for (const c of sc.cells) m.set(c.org, (m.get(c.org) || 0) + ctx.real(c.amt, c.fy)); return [...m.entries()].sort((a, b) => b[1] - a[1]); };
 
   // ---------------------------------------------------------------- overview
   M.views['np-overview'] = {
     id: 'np-overview', dash: 'np', nav: 'Overview', title: 'Follow the nonprofit money', what: 'City payments to nonprofits, who receives them, and how dependent those organizations are on the city.',
     how: 'Tiles and charts use your filters. Real dollars deflate each fiscal year with the SF-area CPI to FY2025 dollars. Click an organization to open its profile, which links to its finances, monitoring results, the audits of the departments that fund it, and its network connections.',
-    filters: ['years', 'dept', 'area', 'size', 'real'], files: Object.assign({ fin: 'nonprofits/finances/form990.json', rev: 'nonprofits/reviews/findings.json' }, FILES),
+    filters: ['years', 'dept', 'area', 'size', 'real'], files: Object.assign({ rev: 'nonprofits/reviews/findings.json' }, FILES),
     render(ctx) {
       const sc = scope(ctx), { cells, orgSet, y0, y1 } = sc;
       const top = byOrgTotal(sc, ctx);
@@ -57,7 +65,7 @@
         const nom = years.map((y) => st_.sum(cells.filter((c) => c.fy === y), 'amt')), real = years.map((y, i) => st_.sum(cells.filter((c) => c.fy === y), (c) => M.stats.real(c.amt, c.fy, ctx.meta.deflator)));
         if (!cells.length) return ctx.empty(el, 'No payments match', 'Widen the fiscal years or clear a filter.');
         const rs = { id: 'real', label: `Real (FY${ctx.meta.deflator.base_fy} $)`, color: 'var(--c-real)', values: real, dash: !ctx.state.real }, ns = { id: 'nom', label: 'Nominal', color: ctx.state.real ? 'var(--c-nominal)' : 'var(--c-real)', values: nom, dash: ctx.state.real };
-        return C.lines(el, { x: years, xFormat: (y) => `FY${String(y).slice(2)}`, series: ctx.state.real ? [rs, ns] : [ns, Object.assign(rs, { color: 'var(--c-nominal)' })], yTitle: `Dollars (solid line: ${ctx.dollars})`, aria: 'Payments by fiscal year' });
+        return C.lines(el, { x: years, xFormat: (y) => `FY${String(y).slice(2)}`, series: ctx.state.real ? [rs, ns] : [ns, Object.assign(rs, { color: 'var(--c-nominal)' })], yTitle: `Dollars (solid line: ${ctx.dollars})`, annotations: M.commentary.annotationsFor(ctx.commentary, 'np_trend'), aria: 'Payments by fiscal year' });
       }, foot: [`n = ${fmt.int(cells.length)} payment records`, `deflator: ${String(ctx.meta.deflator.source || '').split(',')[0]}`] });
       ctx.card({ title: `Largest recipients, ${fmt.range(y0, y1, 'FY')}`, sub: 'Total paid; click a bar to open the organization', span: 5, render(el) {
         if (!top.length) return ctx.empty(el, 'No organizations match');
@@ -104,7 +112,7 @@
     how: 'Each dot is an organization in the chosen year: city payments on a log axis against city payments divided by total revenue. Above 75% is shaded as high dependency. Dependency is a risk to understand, not a finding of wrongdoing.',
     filters: ['years', 'dept', 'area', 'size', 'real'], files: Object.assign({ fin: 'nonprofits/finances/form990.json' }, FILES),
     render(ctx) {
-      const sc = scope(ctx), fy = +ctx.v('fy', sc.y1);
+      const sc = scope(ctx), d990 = default990Fy(ctx, sc), fy = Math.min(sc.y1, Math.max(sc.y0, +ctx.v('fy', d990.fy)));
       const payFy = new Map(); for (const c of sc.cells) if (c.fy === fy) payFy.set(c.org, (payFy.get(c.org) || 0) + c.amt);
       const fin = ctx.data.fin.rows.filter((r) => r.fy === fy && sc.orgSet.has(r.org) && payFy.has(r.org) && r.total_revenue > 0).map((r) => ({ r, o: sc.org(r.org), city: payFy.get(r.org), share: payFy.get(r.org) / r.total_revenue }));
       ctx.feed(`Form 990 filings for FY${fy}`, fin.length, ctx.data.fin.rows.filter((r) => r.fy === fy).length);
@@ -112,6 +120,7 @@
       Object.assign(ctx.slots, { fy: `FY${fy}`, orgs: fin.length, orgs_fmt: fmt.int(fin.length), median_share: fmt.pct(st_.median(fin.map((f) => f.share))), hi_fmt: fmt.int(hi.length), __small: fin.length < ctx.meta.small_n });
       ctx.live('dep');
       const yearCtl = { label: 'Year', key: 'fy', value: fy, options: ctx.yearList().map((y) => [y, `FY${y}`]), onChange: (v) => ctx.setV('fy', v) };
+      if (d990.note && ctx.v('fy', null) == null) ctx.fair(d990.note, 'Year shown');
       ctx.card({ title: 'City dollars vs city share of revenue', sub: `FY${fy} · one dot per organization with a Form 990`, span: 8, controls: [yearCtl], render(el) {
         if (fin.length < 3) return ctx.empty(el, 'Too few organizations', `${fin.length} organizations have a Form 990 for FY${fy} under these filters.`);
         return C.scatter(el, { points: fin.map((f) => ({ id: f.o.id, x: ctx.real(f.city, fy), y: Math.min(f.share, 1.2), label: f.o.name, color: AREA_COLOR(f.o.area), sub: `${sc.areaLabel(f.o.area)} · revenue ${fmt.money(ctx.real(f.r.total_revenue, fy))} · city ${fmt.money(ctx.real(f.city, fy))} · city share ${fmt.pct(f.share)}`, onClick: () => M.state.set({ view: 'org', id: f.o.id }) })), logX: 50000, xTitle: `City payments (${ctx.dollars})`, yTitle: 'City share of total revenue', maxY: 1.25, refY: 0.75, refLabel: '75%: high dependency', legend: ctx.meta.dimensions.area.values.filter((a) => fin.some((f) => f.o.area === a.id)).map((a) => ({ label: a.label, color: AREA_COLOR(a.id) })), aria: 'Dependency scatter' });
@@ -136,13 +145,14 @@
     how: 'Pay is the highest-paid officer’s total compensation on the Form 990. The range bars show the middle half (box), median (tick) and 90th percentile (dot) within each size band, so “high” means high for a peer. Reserves are unrestricted net assets divided by monthly expenses.',
     filters: ['years', 'dept', 'area', 'size', 'real'], files: Object.assign({ fin: 'nonprofits/finances/form990.json' }, FILES),
     render(ctx) {
-      const sc = scope(ctx), fy = +ctx.v('fy', sc.y1);
+      const sc = scope(ctx), d990 = default990Fy(ctx, sc), fy = Math.min(sc.y1, Math.max(sc.y0, +ctx.v('fy', d990.fy)));
       const fin = ctx.data.fin.rows.filter((r) => r.fy === fy && sc.orgSet.has(r.org)).map((r) => ({ r, o: sc.org(r.org) }));
       const withPay = fin.filter((f) => f.r.exec_comp != null && f.r.total_expenses > 0), withRes = fin.filter((f) => f.r.months_reserves != null);
       ctx.feed(`Form 990 filings for FY${fy}`, fin.length, ctx.data.fin.rows.filter((r) => r.fy === fy).length);
       const low = withRes.filter((f) => f.r.months_reserves < 1);
       Object.assign(ctx.slots, { fy: `FY${fy}`, orgs: fin.length, orgs_fmt: fmt.int(fin.length), median_pay: fmt.money(st_.median(withPay.map((f) => ctx.real(f.r.exec_comp, fy)))), n_low_fmt: fmt.int(low.length), __small: fin.length < ctx.meta.small_n });
       ctx.live('pay');
+      if (d990.note && ctx.v('fy', null) == null) ctx.fair(d990.note, 'Year shown');
       ctx.fair('High compensation is unusual, not improper. Boards set executive pay; the figures are shown because the city funds most of these budgets, and they are compared with peers of the same size, never with city salaries.');
       const yearCtl = { label: 'Year', key: 'fy', value: fy, options: ctx.yearList().map((y) => [y, `FY${y}`]), onChange: (v) => ctx.setV('fy', v) };
       const sizes = ctx.meta.dimensions.size_band.values;
@@ -191,7 +201,7 @@
         ratios.forEach((r) => counts[r < 1.25 ? 0 : r < 1.5 ? 1 : r < 2 ? 2 : r < 3 ? 3 : r < 5 ? 4 : 5]++);
         return C.histogram(el, { counts, labels, highlight: [3, 4, 5], unit: 'contracts', xTitle: 'Growth ratio', aria: 'Growth histogram' });
       }, note: 'Orange: at least doubled.', foot: `n = ${fmt.int(amended.length)} amended of ${fmt.int(cons.length)} contracts` });
-      ctx.card({ title: 'Original vs latest agreed amount', sub: 'The 15 contracts that grew most in dollars; sole-source marked', span: 7, render(el) {
+      ctx.card({ title: 'Original vs latest agreed amount', sub: 'The 12 contracts that grew most in dollars; sole-source marked', span: 7, render(el) {
         const rows = amended.slice().sort((a, b) => (b.agreed - b.original_agreed) - (a.agreed - a.original_agreed)).slice(0, 12);
         if (!rows.length) return ctx.empty(el, 'No amended contracts match');
         return C.slope(el, { rows: rows.map((c) => ({ label: sc.org(c.org).name, a: $(c.original_agreed, c), b: $(c.agreed, c), color: AREA_COLOR(sc.org(c.org).area), sub: (c.sole_source ? '· sole source' : '') + ` · ${(c.amendments || []).length} amend.`, onClick: () => M.state.set({ view: 'org', id: c.org }) })), aLabel: 'Original agreed', bLabel: 'Latest agreed', height: 440, log: 100000, aria: 'Contract growth slope chart' });
@@ -224,8 +234,8 @@
       const COL = {}; results.forEach((r, i) => (COL[r.id] = `var(--ord-${Math.min(5, i + 1 + Math.max(0, 5 - results.length))})`));
       ctx.card({ title: 'Monitoring results by fiscal year', sub: 'Share of reviewed organizations at each level', span: 7, render(el) {
         if (!rev.length) return ctx.empty(el, 'No monitoring results match');
-        return C.stackedBars(el, { categories: years, catFormat: (y) => `FY${String(y).slice(2)}`, percent: true, series: results.map((r) => ({ id: r.id, label: r.label, color: COL[r.id], values: years.map((y) => rev.filter((x) => x.fy === y && x.result === r.id).length) })), n: years.map((y) => rev.filter((x) => x.fy === y).length), nHead: 'reviews', rawFormat: (v) => `${fmt.int(v)} reviews`, aria: 'Results by year' });
-      }, note: 'The ordinal ramp runs from no findings (light) to red flag (dark).' });
+        return C.stackedBars(el, { categories: years, catFormat: (y) => `FY${String(y).slice(2)}`, percent: true, series: results.map((r) => ({ id: r.id, label: r.label, color: COL[r.id], values: years.map((y) => rev.filter((x) => x.fy === y && x.result === r.id).length) })), n: years.map((y) => rev.filter((x) => x.fy === y).length), small: years.map((y) => rev.filter((x) => x.fy === y).length < ctx.meta.small_n), nHead: 'reviews', rawFormat: (v) => `${fmt.int(v)} reviews`, aria: 'Results by year' });
+      }, note: `The ordinal ramp runs from no findings (light) to red flag (dark). Years with fewer than ${ctx.meta.small_n} reviews are greyed.` });
       ctx.card({ title: 'What the findings were about', sub: 'Categories cited, all results with findings', span: 5, render(el) {
         const counts = new Map(); rev.forEach((r) => r.categories.forEach((c) => counts.set(c, (counts.get(c) || 0) + 1)));
         const rows = [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([label, value]) => ({ label, value }));

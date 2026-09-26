@@ -85,6 +85,11 @@
         if (lv.unavailable) { add(vid, 'renders', true, 'analysis not available yet (file missing or invalid): the view is blank by design'); continue; }
         add(vid, 'renders with default filters, no errors', consoleErrors.length === before && M.app.errors.length === errs0, [...consoleErrors.slice(before), ...M.app.errors.slice(errs0)].join(' | '));
         const F0 = fingerprint(), S0 = strip();
+        // every chart has a table twin and keyboard-focusable marks
+        const cards = [...document.querySelectorAll('#content .card')].filter((c) => c.querySelector('svg.chart, .nw-canvas svg'));
+        const noTwin = cards.filter((c) => { const b = c.querySelector('.tbl-btn'); return !b || b.hidden; }).map((c) => (c.querySelector('.card-title') || {}).textContent);
+        const noFocus = cards.filter((c) => !c.querySelector('svg [tabindex]')).map((c) => (c.querySelector('.card-title') || {}).textContent);
+        if (cards.length) add(vid, `every chart has a table twin and focusable marks (${cards.length} charts)`, !noTwin.length && !noFocus.length, [noTwin.length ? 'no twin: ' + noTwin.join('; ') : '', noFocus.length ? 'no focusable marks: ' + noFocus.join('; ') : ''].filter(Boolean).join(' · '));
         // undeclared filters are labelled
         const absent = dash.filterKeys.filter((k) => !(view.filters || []).includes(k));
         const bar = document.getElementById('filterbar'), na = bar.querySelector('.filter-na');
@@ -112,6 +117,19 @@
         }
       }
     }
+  }
+  async function keyboardChecks() {
+    await show(defaults('np-overview'));
+    const mark = document.querySelector('#content svg.chart g[tabindex]');
+    if (!mark) { add('a11y', 'chart marks are focusable', false, 'no focusable mark found'); return; }
+    mark.focus();
+    const tip = document.querySelector('.tip');
+    add('a11y', 'focusing a chart mark shows the tooltip and names the mark', document.activeElement === mark && tip && !tip.hidden && (mark.getAttribute('aria-label') || '').length > 3, mark.getAttribute('aria-label'));
+    const th = document.querySelector('#content .data-table th .th-btn');
+    if (th) { th.click(); add('a11y', 'sortable table headers are buttons with aria-sort', !!document.querySelector('#content .data-table th[aria-sort="ascending"], #content .data-table th[aria-sort="descending"]'), ''); }
+    const svgs = [...document.querySelectorAll('#content svg.chart')];
+    add('a11y', 'every chart SVG has a title and a group label', svgs.every((x) => x.querySelector('title') && x.getAttribute('aria-label')), `${svgs.length} charts`);
+    add('a11y', 'skip link and labelled data strip present', !!document.querySelector('.skip-link') && !!document.querySelector('.datastrip[aria-label]'), '');
   }
   async function partitionChecks() {
     const cases = [['np', 'np-flows', 'dept', 0], ['au', 'au-status', 'source', 0], ['pf', 'pf-spending', 'group', 0], ['nw', 'nw-overview', 'flow', 0]];
@@ -168,6 +186,7 @@
       statsChecks();
       await baseRateCheck();
       await viewChecks();
+      await keyboardChecks();
       await partitionChecks();
       await pageChecks();
     } catch (e) { add('selftest', 'runner', false, e.stack || e.message); }

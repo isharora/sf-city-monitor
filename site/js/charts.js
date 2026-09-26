@@ -47,15 +47,23 @@
   }
   function hideTip() { if (tipEl) tipEl.hidden = true; }
   window.addEventListener('scroll', hideTip, { passive: true });
-  function hover(g, show) { g.addEventListener('pointermove', show); g.addEventListener('pointerleave', hideTip); g.addEventListener('focus', show); g.addEventListener('blur', hideTip); }
-  function clickable(g, onClick) { if (!onClick) return; g.style.cursor = 'pointer'; g.addEventListener('click', onClick); g.addEventListener('keydown', (e) => { if (e.key === 'Enter') onClick(e); }); }
+  /** Hover and keyboard focus show the same tooltip; on focus the mark's accessible name is set to the
+      tooltip text so screen readers announce what sighted users see. */
+  function hover(g, show) {
+    g.addEventListener('pointermove', show); g.addEventListener('pointerleave', hideTip);
+    g.addEventListener('focus', (e) => { show(e); if (tipEl) g.setAttribute('aria-label', tipEl.textContent.replace(/\s+/g, ' ').trim()); });
+    g.addEventListener('blur', hideTip);
+    if (!g.getAttribute('role')) g.setAttribute('role', 'img');
+  }
+  function clickable(g, onClick) { if (!onClick) return; g.style.cursor = 'pointer'; g.setAttribute('role', 'button'); g.addEventListener('click', onClick); g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(e); } }); }
 
   // ---------------------------------------------------------------- frame + axes
   function frame(el, opts) {
     el.innerHTML = '';
     const width = measure(el, opts.fallbackWidth), height = opts.height || 280;
     const m = Object.assign({ top: 28, right: 24, bottom: 34, left: 48 }, opts.margin || {});
-    const svg = svgEl('svg', { viewBox: `0 0 ${width} ${height}`, width, height, class: 'chart', role: 'img' }, el);
+    // role=group (not img) so the focusable marks inside stay reachable by assistive technology
+    const svg = svgEl('svg', { viewBox: `0 0 ${width} ${height}`, width, height, class: 'chart', role: 'group', 'aria-label': (opts.aria || 'Chart') + '. Tab to each mark for its values; the Table button shows the same data.' }, el);
     if (opts.aria) { const t = svgEl('title', {}, svg); t.textContent = opts.aria; }
     const g = svgEl('g', { transform: `translate(${m.left},${m.top})` }, svg);
     return { svg, g, width, height, m, iw: width - m.left - m.right, ih: height - m.top - m.bottom };
@@ -104,7 +112,7 @@
       rows.forEach((r, i) => {
         const y = i * rowH + rowH / 2;
         const g = svgEl('g', { class: 'row' + (r.small ? ' small-n' : ''), tabindex: 0 }, f.g);
-        text(g, -10, y + 4, truncate(r.label, (f.m.left - 14) / 6.6), 'row-label', { 'text-anchor': 'end' });
+        text(g, -10, y + 4, fitText(r.label, f.m.left - 16), 'row-label', { 'text-anchor': 'end' });
         if (r.value != null) {
           const x0 = x(Math.min(0, r.value)), x1 = x(Math.max(0, r.value)), w = Math.max(0, x1 - x0);
           if (r.value >= 0) svgEl('path', { d: roundedRight(x0, y - 10, Math.max(w, 1), 20, 4), class: 'bar', style: `fill:${r.color || 'var(--series-1)'}` }, g);
@@ -142,6 +150,10 @@
     return { head, rows: table };
   }
   function truncate(s, n) { s = String(s); return s.length > n ? s.slice(0, Math.max(3, n - 1)) + '…' : s; }
+  /** Truncate to a pixel width, measured with the chart font (uppercase vendor names are much wider than 6.6px a letter). */
+  let measureCtx = null;
+  function textWidth(str, px) { if (!measureCtx) { try { measureCtx = document.createElement('canvas').getContext('2d'); } catch (e) { measureCtx = null; } } if (!measureCtx) return String(str).length * px * 0.55; measureCtx.font = `${px}px ${getComputedStyle(document.body).fontFamily || 'system-ui'}`; return measureCtx.measureText(String(str)).width; }
+  function fitText(s, maxPx, px) { s = String(s == null ? '' : s); px = px || 13; if (textWidth(s, px) <= maxPx) return s; let lo = 1, hi = s.length; while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (textWidth(s.slice(0, mid) + '…', px) <= maxPx) lo = mid; else hi = mid - 1; } return s.slice(0, Math.max(1, lo)).trimEnd() + '…'; }
 
   /** Stacked bars. categories: labels; series:[{id,label,color,values[]}]; percent; horizontal; n[]; small[]; onClick(i). */
   function stackedBars(el, o) {
@@ -164,7 +176,7 @@
       cats.forEach((c, i) => {
         const y = i * rowH + rowH / 2;
         const g = svgEl('g', { class: 'row' + (o.small && o.small[i] ? ' small-n' : ''), tabindex: 0 }, f.g);
-        text(g, -10, y + 4, truncate(c, (f.m.left - 14) / 6.6), 'row-label', { 'text-anchor': 'end' });
+        text(g, -10, y + 4, fitText(c, f.m.left - 16), 'row-label', { 'text-anchor': 'end' });
         let acc = 0;
         series.forEach((s) => { const v = val(s, i); if (!v) return; const x0 = x(acc), x1 = x(acc + v); svgEl('rect', { x: x0 + 1, y: y - 10, width: Math.max(0, x1 - x0 - 2), height: 20, rx: 2, class: 'seg', style: `fill:${s.color}` }, g); if (x1 - x0 > 44 && o.segLabels) text(g, (x0 + x1) / 2, y + 4, format(v), 'seg-label tnum', { 'text-anchor': 'middle' }); acc += v; });
         if (!o.percent) text(g, x(acc) + 6, y + 4, format(acc), 'val-label tnum');
@@ -269,7 +281,7 @@
     const table = [];
     rows.forEach((r, i) => {
       const y = i * rowH + rowH / 2, g = svgEl('g', { class: 'row' + (r.small ? ' small-n' : ''), tabindex: 0 }, f.g);
-      text(g, -10, y + 4, truncate(r.label, (f.m.left - 14) / 6.6), 'row-label', { 'text-anchor': 'end' });
+      text(g, -10, y + 4, fitText(r.label, f.m.left - 16), 'row-label', { 'text-anchor': 'end' });
       if (r.q) {
         svgEl('line', { x1: x(r.q.p25), x2: x(r.q.p90), y1: y, y2: y, class: 'whisker' }, g);
         svgEl('rect', { x: x(r.q.p25), y: y - 9, width: Math.max(2, x(r.q.p75) - x(r.q.p25)), height: 18, rx: 3, class: 'box', style: `fill:${r.color || 'var(--series-1)'}` }, g);
@@ -296,7 +308,7 @@
     axisTitle(f, o.xTitle, 'x');
     rows.forEach((r, i) => {
       const y = i * rowH + rowH / 2, g = svgEl('g', { class: 'row' + (r.small ? ' small-n' : ''), tabindex: 0 }, f.g);
-      text(g, -10, y + 4, truncate(r.label, (f.m.left - 14) / 6.6), 'row-label', { 'text-anchor': 'end' });
+      text(g, -10, y + 4, fitText(r.label, f.m.left - 16), 'row-label', { 'text-anchor': 'end' });
       if (r.a != null && r.b != null) {
         svgEl('line', { x1: x(r.a), x2: x(r.b), y1: y, y2: y, class: 'db-line' }, g);
         svgEl('circle', { cx: x(r.a), cy: y, r: 6, class: 'db-dot', style: `fill:${o.aColor || 'var(--neutral-2)'}` }, g);
@@ -327,7 +339,7 @@
     const dark = (v) => { if (o.diverging) { const mid = o.mid || 0, span = Math.max(Math.abs(vmax - mid), Math.abs(vmin - mid)) || 1; return Math.abs((v - mid) / span) > 0.5; } return ((v - vmin) / (vmax - vmin || 1)) * 7 > 4; };
     const table = R.map((r, i) => [r, ...C.map((_, j) => (V[i][j] != null ? format(V[i][j]) + (o.n && o.n[i][j] != null ? ` (n=${o.n[i][j]})` : '') : '–'))]);
     R.forEach((r, i) => {
-      text(f.g, -10, i * cellH + cellH / 2 + 4, truncate(r, (f.m.left - 14) / 6.6), 'row-label', { 'text-anchor': 'end' });
+      text(f.g, -10, i * cellH + cellH / 2 + 4, fitText(r, f.m.left - 16), 'row-label', { 'text-anchor': 'end' });
       C.forEach((c, j) => {
         const v = V[i][j], n = o.n ? o.n[i][j] : null, small = n != null && n < (o.smallN || 3);
         const g = svgEl('g', { class: small ? 'small-n' : '', tabindex: 0 }, f.g);
@@ -448,5 +460,5 @@
     return { head: o.cols.map((c) => c.label), rows: o.rows.map((r) => o.cols.map((c) => (c.text ? c.text(r) : c.format ? c.format(r[c.key], r) : r[c.key]))) };
   }
 
-  M.charts = { bars, stackedBars, lines, histogram, rangeBars, dumbbell, heatmap, scatter, dotStrip, slope, sparkline, dataTable, legend, showTip, hideTip, h, svgEl, text, frame, lin, niceTicks, hover, centerOf, truncate };
+  M.charts = { fitText, textWidth, bars, stackedBars, lines, histogram, rangeBars, dumbbell, heatmap, scatter, dotStrip, slope, sparkline, dataTable, legend, showTip, hideTip, h, svgEl, text, frame, lin, niceTicks, hover, centerOf, truncate };
 })();
