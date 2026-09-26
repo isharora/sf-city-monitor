@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-26T12:09:42",
+ "generated_at": "2026-09-26T12:16:32",
  "tool": "site/tools/bundle.py",
  "chunk_limit": 380000,
  "modules": {
@@ -2284,7 +2284,7 @@
     },
     "network/insights/insights.json": {
      "status": "ok",
-     "bytes": 75122,
+     "bytes": 74972,
      "raw": [
       "../network/data/site/insights/insights.json"
      ],
@@ -2295,27 +2295,19 @@
      "warnings": [
       "insights[0] (rank 1, outside-spending-outran-donations-2024): theme 'campaign-money' is not in the contract's vocabulary (shown title-cased)",
       "insights[1] (rank 2, lobbyist-ban-clean-break): theme 'reforms' is not in the contract's vocabulary (shown title-cased)",
-      "insights[1] (rank 2, lobbyist-ban-clean-break): title is 98 characters (contract: under ~90; the claim wraps to three lines)",
-      "insights[1] (rank 2, lobbyist-ban-clean-break) chart.annotations[0] x='2018' is not one of the x values (not drawn)",
-      "insights[1] (rank 2, lobbyist-ban-clean-break): explore.params years 2010-2025 is outside the data (2015-2026); the view clamps it",
       "insights[2] (rank 3, soda-tobacco-vape-ballot-money): theme 'campaign-money' is not in the contract's vocabulary (shown title-cased)",
-      "insights[2] (rank 3, soda-tobacco-vape-ballot-money): explore.params years 2010-2026 is outside the data (2015-2026); the view clamps it",
       "insights[3] (rank 4, contractor-ban-near-chance): theme 'reforms' is not in the contract's vocabulary (shown title-cased)",
       "insights[4] (rank 5, few-donors-fund-outside-money): theme 'campaign-money' is not in the contract's vocabulary (shown title-cased)",
       "insights[5] (rank 6, behested-records-disappeared): theme 'transparency' is not in the contract's vocabulary (shown title-cased)",
-      "insights[5] (rank 6, behested-records-disappeared) chart.annotations[0] x='2018' is not one of the x values (not drawn)",
-      "insights[5] (rank 6, behested-records-disappeared) chart.annotations[1] x='2022' is not one of the x values (not drawn)",
       "insights[6] (rank 7, pension-fund-lobbying): theme 'lobbying' is not in the contract's vocabulary (shown title-cased)",
       "insights[7] (rank 8, behests-moved-to-ballot-committees): theme 'behested' is not in the contract's vocabulary (shown title-cased)",
       "insights[7] (rank 8, behests-moved-to-ballot-committees) chart.highlight '2026' names no series, category or point (nothing is emphasized)",
       "insights[8] (rank 9, lobbying-aimed-at-departments): theme 'lobbying' is not in the contract's vocabulary (shown title-cased)",
       "insights[9] (rank 10, robotaxi-lobbying-surge): theme 'lobbying' is not in the contract's vocabulary (shown title-cased)",
-      "insights[9] (rank 10, robotaxi-lobbying-surge): title is 94 characters (contract: under ~90; the claim wraps to three lines)",
       "insights[10] (rank 11, nonprofit-giving-visible-only-where-disclosed): theme 'nonprofits' is not in the contract's vocabulary (shown title-cased)",
       "insights[11] (rank 12, behested-ban-waivers): theme 'behested' is not in the contract's vocabulary (shown title-cased)",
       "insights[11] (rank 12, behested-ban-waivers) chart.highlight '2025' names no series, category or point (nothing is emphasized)",
       "insights[12] (rank 13, ballot-money-from-outside-sf): theme 'campaign-money' is not in the contract's vocabulary (shown title-cased)",
-      "insights[12] (rank 13, ballot-money-from-outside-sf): explore.params years 2010-2026 is outside the data (2015-2026); the view clamps it",
       "insights[13] (rank 14, top-lobbying-clients-also-donors): theme 'lobbying' is not in the contract's vocabulary (shown title-cased)",
       "insights[14] (rank 15, ethics-enforcement-rare): theme 'transparency' is not in the contract's vocabulary (shown title-cased)",
       "insights[15] (rank 16, maxed-out-checks): theme 'campaign-money' is not in the contract's vocabulary (shown title-cased)"
@@ -2326,7 +2318,7 @@
       "data/network/insights/insights.0.js"
      ],
      "split_key": null,
-     "chunk_bytes": 65281
+     "chunk_bytes": 65131
     }
    },
    "commentary": {
