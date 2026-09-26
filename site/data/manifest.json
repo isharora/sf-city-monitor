@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-26T10:17:09",
+ "generated_at": "2026-09-26T10:36:16",
  "tool": "site/tools/bundle.py",
  "chunk_limit": 380000,
  "modules": {
@@ -1873,7 +1873,7 @@
     },
     "network/entities.json": {
      "status": "ok",
-     "bytes": 3022303,
+     "bytes": 3048355,
      "raw": [
       "../network/data/site/entities.json"
      ],
@@ -1882,10 +1882,10 @@
      "errors": [],
      "warnings": [
       "1 strings contain a ZIP-like number (check for addresses; e.g. org-81f33d8dd0.name = 'NTX 94123, LLC')",
-      "1 file(s) over the contract's 400 KB (largest 3022 KB: entities.json); bundled in chunks"
+      "1 file(s) over the contract's 400 KB (largest 3048 KB: entities.json); bundled in chunks"
      ],
      "notes": [],
-     "rows": 17040,
+     "rows": 17039,
      "repaired": false,
      "chunks": [
       "data/network/entities.0.js",
@@ -1899,11 +1899,11 @@
       "data/network/entities.8.js"
      ],
      "split_key": "entities",
-     "chunk_bytes": 2523968
+     "chunk_bytes": 2528203
     },
     "network/flows.json": {
      "status": "ok",
-     "bytes": 60104167,
+     "bytes": 60104267,
      "raw": [
       "../network/data/site/flows.json",
       "../network/data/site/flows/flows_2015.json",
@@ -2084,11 +2084,11 @@
       "data/network/flows.149.js"
      ],
      "split_key": "flows",
-     "chunk_bytes": 9337240
+     "chunk_bytes": 9337221
     },
     "network/analyses/ban_window.json": {
      "status": "ok",
-     "bytes": 3168098,
+     "bytes": 3175393,
      "raw": [
       "../network/data/site/analyses/ban_window.json"
      ],
@@ -2096,7 +2096,7 @@
      "optional": false,
      "errors": [],
      "warnings": [
-      "1 file(s) over the contract's 400 KB (largest 3168 KB: ban_window.json); bundled in chunks"
+      "1 file(s) over the contract's 400 KB (largest 3175 KB: ban_window.json); bundled in chunks"
      ],
      "notes": [],
      "rows": 7884,
@@ -2114,11 +2114,11 @@
       "data/network/analyses/ban_window.9.js"
      ],
      "split_key": "records",
-     "chunk_bytes": 984513
+     "chunk_bytes": 1003837
     },
     "network/analyses/behested.json": {
      "status": "ok",
-     "bytes": 74990,
+     "bytes": 74940,
      "raw": [
       "../network/data/site/analyses/behested.json"
      ],
@@ -2133,11 +2133,11 @@
       "data/network/analyses/behested.0.js"
      ],
      "split_key": null,
-     "chunk_bytes": 75045
+     "chunk_bytes": 74995
     },
     "network/analyses/lobbying.json": {
      "status": "ok",
-     "bytes": 4537939,
+     "bytes": 4538003,
      "raw": [
       "../network/data/site/analyses/lobbying.json"
      ],
@@ -2156,7 +2156,7 @@
       "data/network/analyses/lobbying.2.js"
      ],
      "split_key": "rows",
-     "chunk_bytes": 953793
+     "chunk_bytes": 953799
     },
     "network/analyses/concentration.json": {
      "status": "ok",
@@ -2200,7 +2200,7 @@
    "commentary": {
     "network/commentary/nw-overview.json": {
      "status": "ok",
-     "bytes": 3964,
+     "bytes": 4149,
      "raw": [
       "../network/data/site/commentary/nw-overview.json"
      ],
@@ -2210,7 +2210,7 @@
      "chunks": [
       "data/network/commentary/nw-overview.0.js"
      ],
-     "chunk_bytes": 3844
+     "chunk_bytes": 4029
     },
     "network/commentary/nw-graph.json": {
      "status": "ok",
@@ -2228,25 +2228,21 @@
     },
     "network/commentary/nw-ban.json": {
      "status": "ok",
-     "bytes": 4313,
+     "bytes": 4562,
      "raw": [
       "../network/data/site/commentary/nw-ban.json"
      ],
      "sample": false,
      "errors": [],
      "warnings": [],
-     "repaired": true,
-     "notes": [
-      "site override applied (3x, content/overrides.json)"
-     ],
      "chunks": [
       "data/network/commentary/nw-ban.0.js"
      ],
-     "chunk_bytes": 4297
+     "chunk_bytes": 4428
     },
     "network/commentary/nw-behested.json": {
      "status": "ok",
-     "bytes": 3595,
+     "bytes": 3643,
      "raw": [
       "../network/data/site/commentary/nw-behested.json"
      ],
@@ -2256,7 +2252,7 @@
      "chunks": [
       "data/network/commentary/nw-behested.0.js"
      ],
-     "chunk_bytes": 3457
+     "chunk_bytes": 3495
     },
     "network/commentary/nw-lobby.json": {
      "status": "ok",
@@ -2302,7 +2298,7 @@
     },
     "network/commentary/nw-entities.json": {
      "status": "ok",
-     "bytes": 1079,
+     "bytes": 1103,
      "raw": [
       "../network/data/site/commentary/nw-entities.json"
      ],
@@ -2312,7 +2308,7 @@
      "chunks": [
       "data/network/commentary/nw-entities.0.js"
      ],
-     "chunk_bytes": 1080
+     "chunk_bytes": 1104
     },
     "network/commentary/story_nw.json": {
      "status": "ok",

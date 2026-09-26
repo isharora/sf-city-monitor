@@ -1,22 +1,5 @@
 {
  "_about": "Site-level corrections to module commentary, applied by tools/bundle.py to the bundled copy only (the module's export is untouched, and the loader then always uses the corrected chunk). Each entry replaces an exact text; the bundler warns when the text is no longer found, which means the module has fixed it and the entry can be removed.",
- "network/commentary/nw-ban.json": [
-  {
-   "why": "The site's chance bar now uses the matched benchmark; the pooled figure overstates chance and is not shown anywhere.",
-   "find": "Read the chart's \"expected by chance\" bar with care: it pools every window a contractor has, including approvals by offices that do not cover the recipient and filings that do not list the donor, so it reads high (the exporter's pooled figure for 2019-2025 records is 45%; the bar recomputes it for the records in view). Matched like with like, 19.4% of contributions would land in a window by chance, and 16.5% did.",
-   "replace": "The \"expected by chance\" bar is matched like with like: it counts only the approvals that list the donor and whose approving office covered the recipient, with days weighted by the election calendar. On that basis 19.4% of contributions would land in a window by chance, and 16.5% did. A simpler benchmark that pools every window a contractor has, including approvals by offices that do not cover the recipient, reads much higher and overstates chance, so it is not used."
-  },
-  {
-   "why": "Live sentence: {expected_share} is now the matched benchmark.",
-   "find": "({inside_share}; the pooled chance benchmark for these records is {expected_share}, which overstates chance)",
-   "replace": "({inside_share}; over all years, matched like with like, {observed_matched} fell inside a window against {expected_share} expected by chance)"
-  },
-  {
-   "why": "Caveat described the old pooled bar.",
-   "find": "The \"expected by chance\" bar pools all of a contractor's windows and overstates chance; the matched benchmark in the analyst's read (19%) is the fair comparison.",
-   "replace": "The \"expected by chance\" bar is the matched benchmark (19.4%) for all years; it rests on the approval-date proxy and the election-calendar weighting, and it does not change with your filters."
-  }
- ],
  "audits/commentary/au-overview.json": [
   {
    "why": "Red team 2: the site now computes impl_share over recommendations with a recorded follow-up status (as the finding does) and shows the no-status count; the template described the old all-rows computation.",
