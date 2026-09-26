@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-26T11:36:43",
+ "generated_at": "2026-09-26T12:00:06",
  "tool": "site/tools/bundle.py",
  "chunk_limit": 380000,
  "modules": {
@@ -173,7 +173,7 @@
     },
     "nonprofits/insights/insights.json": {
      "status": "ok",
-     "bytes": 74060,
+     "bytes": 81132,
      "raw": [
       "../nonprofits/data/site/insights/insights.json"
      ],
@@ -182,13 +182,13 @@
      "insights": true,
      "errors": [],
      "warnings": [
-      "insights[4] (rank 5, dependency-held-steady): theme 'financial-health' is not in the contract's vocabulary (shown title-cased)",
-      "insights[5] (rank 6, dependency-and-corrective-action): theme 'financial-health' is not in the contract's vocabulary (shown title-cased)",
-      "insights[6] (rank 7, doubled-contracts-mostly-got-longer): theme 'contracting' is not in the contract's vocabulary (shown title-cased)",
-      "insights[8] (rank 9, dependent-nonprofits-thin-reserves): theme 'financial-health' is not in the contract's vocabulary (shown title-cased)",
-      "insights[9] (rank 10, emergency-authority-contracts): theme 'contracting' is not in the contract's vocabulary (shown title-cased)",
-      "insights[10] (rank 11, top-recipients-reshuffled): theme 'concentration' is not in the contract's vocabulary (shown title-cased)",
-      "insights[11] (rank 12, pass-through-organizations): theme 'concentration' is not in the contract's vocabulary (shown title-cased)",
+      "insights[5] (rank 6, dependency-held-steady): theme 'financial-health' is not in the contract's vocabulary (shown title-cased)",
+      "insights[6] (rank 7, dependency-and-corrective-action): theme 'financial-health' is not in the contract's vocabulary (shown title-cased)",
+      "insights[7] (rank 8, doubled-contracts-mostly-got-longer): theme 'contracting' is not in the contract's vocabulary (shown title-cased)",
+      "insights[9] (rank 10, dependent-nonprofits-thin-reserves): theme 'financial-health' is not in the contract's vocabulary (shown title-cased)",
+      "insights[10] (rank 11, emergency-authority-contracts): theme 'contracting' is not in the contract's vocabulary (shown title-cased)",
+      "insights[11] (rank 12, top-recipients-reshuffled): theme 'concentration' is not in the contract's vocabulary (shown title-cased)",
+      "insights[12] (rank 13, pass-through-organizations): theme 'concentration' is not in the contract's vocabulary (shown title-cased)",
       "insights[16] (rank 17, fastest-rising-dependency): theme 'financial-health' is not in the contract's vocabulary (shown title-cased)"
      ],
      "notes": [],
@@ -197,7 +197,7 @@
       "data/nonprofits/insights/insights.0.js"
      ],
      "split_key": null,
-     "chunk_bytes": 62790
+     "chunk_bytes": 69709
     }
    },
    "commentary": {
@@ -1758,16 +1758,43 @@
      "chunk_bytes": 11671147
     },
     "audits/insights/insights.json": {
-     "status": "missing",
-     "bytes": 0,
-     "raw": [],
+     "status": "ok",
+     "bytes": 82103,
+     "raw": [
+      "../audits/data/site/insights/insights.json"
+     ],
      "sample": false,
      "optional": true,
      "insights": true,
      "errors": [],
-     "warnings": [],
+     "warnings": [
+      "insights[0] (rank 1, controller-recommendations-fell-three-quarters): theme 'trends' is not in the contract's vocabulary (shown title-cased)",
+      "insights[1] (rank 2, controller-implemented-rate-rests-on-report-closure): theme 'verification' is not in the contract's vocabulary (shown title-cased)",
+      "insights[2] (rank 3, grand-jury-law-changes-rarely-done): theme 'refusals' is not in the contract's vocabulary (shown title-cased)",
+      "insights[3] (rank 4, repeat-findings-follow-implemented-fixes): theme 'repeat-findings' is not in the contract's vocabulary (shown title-cased)",
+      "insights[4] (rank 5, grand-jury-refusals-mostly-not-on-merits): theme 'refusals' is not in the contract's vocabulary (shown title-cased)",
+      "insights[5] (rank 6, emergency-water-study-yes-funding-no): theme 'safety' is not in the contract's vocabulary (shown title-cased)",
+      "insights[6] (rank 7, board-and-mayor-give-most-refusals): theme 'refusals' is not in the contract's vocabulary (shown title-cased)",
+      "insights[7] (rank 8, tenant-reporting-most-repeated-finding): theme 'repeat-findings' is not in the contract's vocabulary (shown title-cased)",
+      "insights[8] (rank 9, further-analysis-usually-ends-in-no): theme 'follow-through' is not in the contract's vocabulary (shown title-cased)",
+      "insights[9] (rank 10, police-civilianization-17-years): theme 'repeat-findings' is not in the contract's vocabulary (shown title-cased)",
+      "insights[10] (rank 11, board-analyst-recommendations-untracked): theme 'follow-through' is not in the contract's vocabulary (shown title-cased)",
+      "insights[11] (rank 12, contractor-evaluations-30-years): theme 'repeat-findings' is not in the contract's vocabulary (shown title-cased)",
+      "insights[12] (rank 13, open-recommendations-not-updated): theme 'follow-through' is not in the contract's vocabulary (shown title-cased)",
+      "insights[13] (rank 14, controller-long-open-list-down-to-seven): theme 'follow-through' is not in the contract's vocabulary (shown title-cased)",
+      "insights[14] (rank 15, port-audited-20-times-fire-per-dollar): theme 'coverage' is not in the contract's vocabulary (shown title-cased)",
+      "insights[15] (rank 16, public-integrity-reforms-closed): theme 'trends' is not in the contract's vocabulary (shown title-cased)",
+      "insights[16] (rank 17, largest-dollar-findings-mostly-estimates): theme 'dollars' is not in the contract's vocabulary (shown title-cased)",
+      "insights[17] (rank 18, grand-jury-told-already-done): theme 'refusals' is not in the contract's vocabulary (shown title-cased)",
+      "insights[18] (rank 19, it-fixes-take-twice-as-long): theme 'follow-through' is not in the contract's vocabulary (shown title-cased)"
+     ],
      "notes": [],
-     "rows": 0
+     "rows": 19,
+     "chunks": [
+      "data/audits/insights/insights.0.js"
+     ],
+     "split_key": null,
+     "chunk_bytes": 70136
     }
    },
    "commentary": {
@@ -2256,16 +2283,49 @@
      "chunk_bytes": 27788
     },
     "network/insights/insights.json": {
-     "status": "missing",
-     "bytes": 0,
-     "raw": [],
+     "status": "ok",
+     "bytes": 72744,
+     "raw": [
+      "../network/data/site/insights/insights.json"
+     ],
      "sample": false,
      "optional": true,
      "insights": true,
      "errors": [],
-     "warnings": [],
+     "warnings": [
+      "insights[0] (rank 1, outside-spending-outran-donations-2024): theme 'campaign-money' is not in the contract's vocabulary (shown title-cased)",
+      "insights[1] (rank 2, lobbyist-ban-clean-break): theme 'reforms' is not in the contract's vocabulary (shown title-cased)",
+      "insights[1] (rank 2, lobbyist-ban-clean-break) chart.annotations[0] x='2018' is not one of the x values (not drawn)",
+      "insights[1] (rank 2, lobbyist-ban-clean-break): explore.params years 2010-2025 is outside the data (2015-2026); the view clamps it",
+      "insights[2] (rank 3, soda-tobacco-vape-ballot-money): theme 'campaign-money' is not in the contract's vocabulary (shown title-cased)",
+      "insights[2] (rank 3, soda-tobacco-vape-ballot-money): title is 98 characters (contract: under ~90; the claim wraps to three lines)",
+      "insights[2] (rank 3, soda-tobacco-vape-ballot-money): explore.params years 2010-2026 is outside the data (2015-2026); the view clamps it",
+      "insights[3] (rank 4, contractor-ban-near-chance): theme 'reforms' is not in the contract's vocabulary (shown title-cased)",
+      "insights[4] (rank 5, few-donors-fund-outside-money): theme 'campaign-money' is not in the contract's vocabulary (shown title-cased)",
+      "insights[5] (rank 6, behested-records-disappeared): theme 'transparency' is not in the contract's vocabulary (shown title-cased)",
+      "insights[5] (rank 6, behested-records-disappeared) chart.annotations[0] x='2018' is not one of the x values (not drawn)",
+      "insights[5] (rank 6, behested-records-disappeared) chart.annotations[1] x='2022' is not one of the x values (not drawn)",
+      "insights[6] (rank 7, pension-fund-lobbying): theme 'lobbying' is not in the contract's vocabulary (shown title-cased)",
+      "insights[7] (rank 8, behests-moved-to-ballot-committees): theme 'behested' is not in the contract's vocabulary (shown title-cased)",
+      "insights[7] (rank 8, behests-moved-to-ballot-committees) chart.highlight '2026' names no series, category or point (nothing is emphasized)",
+      "insights[8] (rank 9, lobbying-aimed-at-departments): theme 'lobbying' is not in the contract's vocabulary (shown title-cased)",
+      "insights[9] (rank 10, robotaxi-lobbying-surge): theme 'lobbying' is not in the contract's vocabulary (shown title-cased)",
+      "insights[10] (rank 11, nonprofit-giving-visible-only-where-disclosed): theme 'nonprofits' is not in the contract's vocabulary (shown title-cased)",
+      "insights[11] (rank 12, behested-ban-waivers): theme 'behested' is not in the contract's vocabulary (shown title-cased)",
+      "insights[11] (rank 12, behested-ban-waivers) chart.highlight '2025' names no series, category or point (nothing is emphasized)",
+      "insights[12] (rank 13, ballot-money-from-outside-sf): theme 'campaign-money' is not in the contract's vocabulary (shown title-cased)",
+      "insights[12] (rank 13, ballot-money-from-outside-sf): explore.params years 2010-2026 is outside the data (2015-2026); the view clamps it",
+      "insights[13] (rank 14, top-lobbying-clients-also-donors): theme 'lobbying' is not in the contract's vocabulary (shown title-cased)",
+      "insights[14] (rank 15, ethics-enforcement-rare): theme 'transparency' is not in the contract's vocabulary (shown title-cased)",
+      "insights[15] (rank 16, maxed-out-checks): theme 'campaign-money' is not in the contract's vocabulary (shown title-cased)"
+     ],
      "notes": [],
-     "rows": 0
+     "rows": 16,
+     "chunks": [
+      "data/network/insights/insights.0.js"
+     ],
+     "split_key": null,
+     "chunk_bytes": 62887
     }
    },
    "commentary": {
