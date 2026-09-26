@@ -763,11 +763,14 @@ def build_site_json(mods, loaded_meta):
                 continue
             if v["id"] in seen:
                 d = seen[v["id"]]
+                if mods[m]["source"] == "real":
+                    d["sample"] = False
                 for k in ("name", "group", "short"):
                     if not d.get(k) and v.get(k):
                         d[k] = v[k]
                 continue
-            d = {"id": v["id"], "name": v.get("name") or v.get("label") or v["id"], "group": v.get("group"), "short": v.get("short") or v["id"], "from": m}
+            d = {"id": v["id"], "name": v.get("name") or v.get("label") or v["id"], "group": v.get("group"), "short": v.get("short") or v["id"], "from": m,
+                 "sample": mods[m]["source"] == "sample"}
             seen[v["id"]] = d
             depts.append(d)
     groups = ((loaded_meta.get("performance") or {}).get("dimensions") or {}).get("group", {}).get("values") or []

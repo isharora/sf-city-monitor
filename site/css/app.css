@@ -427,3 +427,4 @@ a.dash-card:hover h2 { text-decoration: underline; text-decoration-color: var(--
 .view-tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 0 0 14px; font-size: 13px; }
 .view-tools .muted { color: var(--text-muted); font-size: 12.5px; }
 .data-table .muted-sub { color: var(--text-muted); font-size: 11.5px; white-space: nowrap; }
+.data-table td.nowrap { white-space: nowrap; }

@@ -125,6 +125,7 @@
       const id = ctx.state.id, d = (ctx.site.departments || []).find((x) => x.id === id);
       if (!d) { ctx.empty(ctx.h('div', 'col-12 card', ctx.grid), 'Unknown department', `No department with id ${id || '(none)'}. Department ids are Controller codes such as DPH or POL.`); return; }
       document.querySelector('.view-title').textContent = d.name; document.title = `${d.name} · SF City Monitor`;
+      if (d.sample) ctx.h('div', 'sample-banner', ctx.pre, `Sample department: ${d.name} (${d.id}) appears only in synthetic sample data (from the ${d.from} sample), not in any published export.`);
       const pfm = ctx.metas.pf, aum = ctx.metas.au;
       const spend = ctx.data.spend ? ctx.data.spend.cells.filter((c) => c.dept === id) : [], years = [...new Set(spend.filter((c) => c.actual != null).map((c) => c.fy))].sort((a, b) => a - b), y1 = years[years.length - 1];
       const staff = ctx.data.staff ? ctx.data.staff.cells.filter((s) => s.dept === id).sort((a, b) => a.fy - b.fy) : [], s1 = staff.find((s) => s.fy === y1) || staff[staff.length - 1] || {};

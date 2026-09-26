@@ -81,7 +81,7 @@
     how: 'The graph shows only the strongest edges (choose how many), so it stays readable; searching for or clicking an entity adds its whole neighborhood and dims the rest. Node size is connected dollars, colour is entity type, edge thickness is amount (contacts weighted by count). Individuals appear only as dashed grey aggregate nodes. The table twin lists every drawn edge.',
     filters: ['years', 'flow', 'etype', 'amt'], files: Object.assign({ ban: 'network/analyses/ban_window.json' }, FILES), optionalFiles: ['ban'],
     render(ctx) {
-      const sc = scope(ctx), sel = ctx.v('focus', null), maxEdges = Math.min(400, +ctx.v('edges', 80) || 80);
+      const sc = scope(ctx), sel = ctx.v('focus', null), maxEdges = Math.min(240, +ctx.v('edges', 80) || 80);
       const banWhy = new Map(((ctx.data.ban && ctx.data.ban.records) || []).filter(isReview).map((r) => [r.flow, r.why]));
       fairnessBox(ctx);
       const wrap = ctx.h('div', 'nw-wrap', ctx.grid); wrap.classList.add('col-12');
@@ -91,7 +91,7 @@
       const search = ctx.h('input', '', tools); search.type = 'search'; search.placeholder = 'Find an entity to focus…'; search.setAttribute('aria-label', 'Find an entity'); search.setAttribute('list', 'nw-ents');
       const dl = ctx.h('datalist', '', tools); dl.id = 'nw-ents'; [...sc.entSet].map((id) => sc.ents.get(id)).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name)).forEach((e) => { const o = ctx.h('option', '', dl); o.value = e.name; });
       search.addEventListener('change', () => { const e = [...sc.ents.values()].find((x) => x.name.toLowerCase() === search.value.trim().toLowerCase()); if (e) ctx.setV('focus', e.id); });
-      const selE = ctx.h('select', 'ctl', tools); selE.setAttribute('aria-label', 'How many edges to show'); [[40, 'Top 40 edges'], [80, 'Top 80 edges'], [160, 'Top 160 edges'], [400, 'Top 400 edges (maximum drawn)']].forEach(([v, l]) => { const o = ctx.h('option', '', selE, l); o.value = v; if (v === maxEdges) o.selected = true; }); selE.addEventListener('change', () => ctx.setV('edges', selE.value));
+      const selE = ctx.h('select', 'ctl', tools); selE.setAttribute('aria-label', 'How many edges to show'); [[40, 'Top 40 edges'], [80, 'Top 80 edges'], [160, 'Top 160 edges'], [240, 'Top 240 edges (most drawn at once)']].forEach(([v, l]) => { const o = ctx.h('option', '', selE, l); o.value = v; if (v === maxEdges) o.selected = true; }); selE.addEventListener('change', () => ctx.setV('edges', selE.value));
       if (sel) { const clr = ctx.h('button', 'btn', tools, 'Clear focus'); clr.addEventListener('click', () => ctx.setV('focus', '')); }
       const tb = ctx.h('button', 'tbl-btn', tools, 'Table'); tb.setAttribute('aria-pressed', 'false');
       const canvas = ctx.h('div', 'nw-canvas', left);
@@ -160,7 +160,7 @@
       const rows = ctx.data.beh.rows.filter((b) => flowIds.has(b.flow)); ctx.feed('behested payments', rows.length, ctx.data.beh.rows.length);
       const total = st_.sum(rows, 'amount'), interested = st_.sum(rows.filter((b) => b.payor_interested_party), 'amount');
       Object.assign(ctx.slots, { __small: rows.length < ctx.meta.small_n, payments: rows.length, payments_fmt: fmt.int(rows.length), total: fmt.money(total), officials_fmt: fmt.int(new Set(rows.map((b) => b.official)).size), interested_share: fmt.pct(total ? interested / total : null), late_fmt: fmt.int(rows.filter((b) => !b.filed_within_30_days).length) });
-      ctx.live('beh'); ctx.rule('behested');
+      ctx.live('beh'); ctx.rule('behested'); fairnessBox(ctx);
       const years = ctx.yearList(), ptypes = ['contractor', 'nonprofit', 'donor_org', 'individuals'];
       ctx.card({ title: 'Behested payments by year and payor type', sub: 'Dollars', span: 7, render(el) {
         if (!rows.length) return ctx.empty(el, 'No behested payments match');
@@ -189,7 +189,7 @@
       const pay = sc.flows.filter((f) => f.type === 'lobby_payment'); ctx.feed('lobbyist payment records', pay.length, ctx.data.flows.flows.filter((f) => f.type === 'lobby_payment').length);
       const byTarget = st_.group(rows, (r) => r.target), topT = [...byTarget.entries()].sort((a, b) => st_.sum(b[1], 'contacts') - st_.sum(a[1], 'contacts'))[0];
       Object.assign(ctx.slots, { __small: rows.length < ctx.meta.small_n, contacts: st_.sum(rows, 'contacts'), contacts_fmt: fmt.int(st_.sum(rows, 'contacts')), lobbyists_fmt: fmt.int(new Set(rows.map((r) => r.lobbyist)).size), clients_fmt: fmt.int(new Set(rows.map((r) => r.client)).size), top_target: topT ? sc.name(topT[0]) : '–', top_target_fmt: topT ? fmt.int(st_.sum(topT[1], 'contacts')) : '–', payments_total: fmt.money(st_.sum(pay, 'amount')) });
-      ctx.live('lob'); ctx.rule('lobby');
+      ctx.live('lob'); ctx.rule('lobby'); fairnessBox(ctx);
       ctx.card({ title: 'Contacts: clients × targets', sub: 'Top 12 clients by contacts against the top 8 targets', span: 12, render(el) {
         if (!rows.length) return ctx.empty(el, 'No lobbying contacts match');
         const clients = [...st_.group(rows, (r) => r.client).entries()].sort((a, b) => st_.sum(b[1], 'contacts') - st_.sum(a[1], 'contacts')).slice(0, 12).map((x) => x[0]);
@@ -221,7 +221,7 @@
       ctx.feed('committees', rows.length, ctx.data.conc.rows.length);
       const tot = st_.sum(rows, 'total'), share = (k) => fmt.pct(st_.sum(rows, (r) => r.by_source_type[k] || 0) / tot);
       Object.assign(ctx.slots, { committees: rows.length, committees_fmt: fmt.int(rows.length), years: cycles.length ? `${fmt.list(cycles)} cycle${cycles.length > 1 ? 's' : ''}` : 'all cycles', ind_share: share('individuals'), org_share: fmt.pct(st_.sum(rows, (r) => (r.by_source_type.donor_org || 0)) / tot), contr_share: share('contractor_affiliated') });
-      ctx.live('conc'); ctx.rule('limits');
+      ctx.live('conc'); ctx.rule('limits'); fairnessBox(ctx);
       const K = [['individuals', 'Individuals (aggregate)', 'var(--c-individuals)'], ['contractor_affiliated', 'Contractor-affiliated individuals (aggregate)', 'var(--c-contractor)'], ['donor_org', 'PACs and other organizations', 'var(--c-donor_org)'], ['nonprofit', 'Nonprofits', 'var(--c-nonprofit)']];
       ctx.card({ title: 'Where each committee’s money came from', sub: 'Share of contribution dollars by source type; sorted by total', span: 12, render(el) {
         const r = rows.slice().sort((a, b) => b.total - a.total).slice(0, 20);
@@ -272,7 +272,10 @@
     filters: ['years', 'flow', 'etype', 'amt'], files: FILES,
     render(ctx) {
       const sc = scope(ctx);
-      const rows = [...sc.ents.values()].filter((e) => inList(sc.st.etype, e.type)).map((e) => { const mine = sc.flows.filter((f) => f.from === e.id || f.to === e.id); return { e, n: mine.length, in_: st_.sum(mine.filter((f) => f.to === e.id), (f) => f.amount || 0), out: st_.sum(mine.filter((f) => f.from === e.id), (f) => f.amount || 0) }; }).filter((r) => r.n);
+      // one pass over the filtered flows (entities × flows would be quadratic on real data)
+      const agg = new Map(), get = (id) => agg.get(id) || (agg.set(id, { n: 0, in_: 0, out: 0 }), agg.get(id));
+      for (const f of sc.flows) { const a = get(f.from), b = get(f.to); a.n++; a.out += f.amount || 0; if (f.to !== f.from) { b.n++; } b.in_ += f.amount || 0; }
+      const rows = [...sc.ents.values()].filter((e) => inList(sc.st.etype, e.type) && agg.has(e.id)).map((e) => Object.assign({ e }, agg.get(e.id)));
       ctx.card({ title: `${fmt.int(rows.length)} entities`, sub: 'Totals reflect the current filters; click to open a profile', span: 12, render(el) {
         return C.dataTable(el, { rows, pageSize: 40, sort: 'in_', placeholder: 'Search entities…', cols: [{ key: 'name', label: 'Entity', text: (r) => r.e.name, render: (td, r) => { if (r.e.type === 'individuals') td.textContent = r.e.name; else td.appendChild(sc.link(r.e.id)); } }, { key: 'type', label: 'Type', text: (r) => sc.typeLabel(r.e.type), render: (td, r) => { const d = ctx.h('i', 'dot', td); d.style.background = TYPE_COLOR(r.e.type); d.style.marginRight = '6px'; td.appendChild(document.createTextNode(sc.typeLabel(r.e.type))); } }, { key: 'n', label: 'Flows', num: true }, { key: 'in_', label: 'Dollars in', num: true, format: (v) => fmt.money(v) }, { key: 'out', label: 'Dollars out', num: true, format: (v) => fmt.money(v) }, { key: 'extra', label: 'Note', text: (r) => r.e.office || (r.e.count ? `${fmt.int(r.e.count)} individuals aggregated` : r.e.sector || '') }] });
       } });
