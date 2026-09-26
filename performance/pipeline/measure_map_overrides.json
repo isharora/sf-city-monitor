@@ -1,0 +1,26 @@
+[
+ {
+  "measure_id": "Mc089c7e1be",
+  "set": {
+   "direction": "neutral"
+  },
+  "why": "hand-check #9"
+ },
+ {
+  "measure_id": "M9042228eb4",
+  "set": {
+   "measure_kind": "output",
+   "direction": "higher_better",
+   "cost_per_unit_meaningful": true,
+   "volume_unit": "library visits"
+  },
+  "why": "hand-check #17"
+ },
+ {
+  "measure_id": "M3d20edf168",
+  "set": {
+   "cost_per_unit_meaningful": false
+  },
+  "why": "hand-check #13: no venue-level budget"
+ }
+]

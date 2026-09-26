@@ -1,0 +1,35 @@
+# Audits module — PROGRESS
+
+## Status log
+- [start] Read RULES.md; created folders pipeline/, data/{raw,pdfs,site,cache}. Next: tooling check, source discovery.
+- [discovery] Sources found (all old sites redirect to sf.gov):
+  - Controller: legacy OpenBook report search https://openbook.sfgov.org/webreports/search.aspx (POST form; categories AU=882, CP=435, Whistleblower=93, 1986-2026). details3.aspx?id=N pages embed the PDF URL inside base64 __VIEWSTATE.
+    Follow-ups are in AU: semiannual "CSA Follow-up on Recommendation Implementation Status" (2012-2026), annual "Recommendations Not Implemented After More Than Two Years" (2014-2025), "Field Follow-up of ..." reports, Public Integrity status updates (2021, 2022, 2024, 2026).
+  - Controller CGJ status tracking docs FY03-04..24-25: https://www.sf.gov/information--status-civil-grand-jury-recommendations/
+  - CGJ reports+responses: archive https://civilgrandjury.archive.sf.gov/{YYYY_YYYY}.html (1995-96..2021-22); sf.gov /resource--20XX--civil-grand-jury-reports-* pages for 2022-23..2025-26.
+  - BLA: https://sfbos.archive.sf.gov/budget-legislative-analyst-reports (2010-2025) + https://www.sf.gov/budget-and-legislative-analyst-bla (2026).
+- LLM helper: pipeline/llm.py (cache, usage log, $480 soft stop). Smoke test OK.
+- [inventory] pipeline/01_inventory.py -> data/raw/inventory.json (2,146 docs: controller 1,410; cgj 472; bla 241; cgj_status 23). Doc IDs: CON-<openbook id>, CGJ-<term>-<urlhash>, BLA-<urlhash>, CGJS-<term>. Fixed ViewState URL decoding (length-prefixed, spaces). util_migrate_ids.py renamed files after the ID change.
+- [download] pipeline/02_download.py -> data/pdfs, data/text (per-page text via pymupdf), data/raw/downloads.json. Scanned PDFs flagged ok_low_text -> sent to Claude as native PDF.
+- [extract] pipeline/03_extract.py + extract_schemas.py. Modes: reports (recommendations) and status (follow-ups, CGJ responses/trackers). Tabular status docs are sent as PDF in 4-page chunks; page offsets applied in code. Status schema has report_level rows (CSA "reports closed" tables). CGJ tracker "**" = implemented-or-abandoned in an earlier column.
+  Running: reports for cgj_report+bla_performance_audit (~$0.11/doc). Next: controller reports, all status docs, then linking.
+- [contract] design/DATA_CONTRACT_audits.md read. Implications: dept ids = Controller codes from performance/pipeline/common.py DEPT_NAMES (e.g. POL, FIR, DPH, MTA, MYR incl. MOHCD); 5-step status (implemented/in_progress/open/not_implementing/closed_other) -> extraction STATUS enum widened; agreed = agree/partial/disagree/none; per-rec months_to_close, repeat_of, dollars_at_stake, consequence{score,why} with a deterministic published rule; commentary au-*.json + story_au.json; CONTRACT_GAPS.md for gaps (BLA has no follow-up -> need 'unknown' status; 'housing' topic not coded).
+- [fix] 7 Controller 2023 PDFs 404'd at old sf.gov paths -> found via api.sf.gov/api/v2/documents/?search= (util_fix_missing_urls.py).
+- [running] reports extraction for Controller types (log data/extract/run_reports_con.log) and status extraction for all status docs (run_status.log).
+- [extract done] reports: 1,562 docs, 0 errors (~$130). CGJ responses 194 done. Trackers/CSA follow-ups still running (run_status*.log).
+- [qc] 06_qc_compare.py sample -> data/qc/sample.json (42 reports stratified 22 CON/12 CGJ/8 BLA, 15 status docs). Opus re-extraction -> data/extract/reports_opus/.
+- Written, not yet run: 04_normalize, 05_link, 07_build_rows, 08_dollars, 09_repeats, 10_analysis; maps.py holds vocab + consequence rule.
+- [fix] Partially scanned PDFs (text PDFs whose recommendation/response pages are images) -> 02_download flags partial_scan (>=2 and >=15% pages with <80 chars); 03_extract sends them as native PDF. Re-extracting those (--force); text-mode results backed up in data/extract/*_textmode_backup/.
+- [link v1 validation] 64-link hand check: 57/60 linked correct; errors from paraphrased CSA follow-up text overriding rec numbers, sub-part splits (1 vs 1a-c), one extraction miss (CON-603 image pages). Linker fixed (number-first for CSA summaries; parent-number -> sub-parts). Re-validate on fresh sample after final run.
+- [final] Dedupe (02b_dedupe.py, 50 docs), partial-scan re-extraction, stale-status fixes, dollar verification (08a), repeat re-clustering + validation (judge 87%, hand 37/40). Export done to data/site/ (QA: all pass except 651 inferred-implemented rows without months_to_close -> CONTRACT_GAPS.md). URL check 895/895 OK.
+- Files: DATA_NOTES.md (complete), data/site/CONTRACT_GAPS.md, pipeline/run_all.sh. ANALYSIS.md: writing a report .md from this subagent was blocked by the harness; full ANALYSIS content returned to the caller in the handback to save as audits/ANALYSIS.md.
+- Spend: $314.69 (Sonnet 5 $286.73, Opus 5.5 $27.95).
+- Numbers: 2,152 docs inventoried, 2,076 PDFs (61,316 pages); 881 reports with recs (CSA 655, CGJ 189, BLA 37); 9,856 distinct recs / 11,739 rows.
+- [redteam2] Independent red team + fairness + commentary pass (pipeline/redteam2/, pipeline/12_commentary.py rewritten, pipeline/verify_commentary.py). Outputs: data/redteam/{rederive,reasons,spotcheck,stories_check,verify_commentary,commentary_trace,redteam2}.json. Findings reproduced from data/site/; agreement headline (92% vs 6%) replaced as compositional/circular; Board/Mayor refusals framed with model-classified reasons; 25-rec PDF spot-check: 1 confirmed error (K-6986bb01bb); five stories corrected (4.5 rewritten). Commentary: 172 traced tokens, 0 failures, 0 untraced. Spend $2.24 (task prefix redteam2_). Site issues listed in redteam2.json -> site_issues_for_orchestrator.
+- [insights] Insights-first page (design/insights/INSIGHTS_CONTRACT.json + INSIGHTS_DESIGN.md §10). Code in pipeline/insights/:
+  classify_actions.py (Sonnet: action type / needs-money / needs-legislation / safety flags for 9,834 of 9,839 distinct recs -> data/insights_work/rec_action_types.json;
+  analyst hand check data/insights_work/handcheck_actions.json 15/18 plausible), field_followups.py (Opus reads all 48 CSA field follow-up memos -> field_followups.json),
+  compute.py (build values), spec.py (templates, verbatim quotes with pages), build_insights.py (-> data/site/insights/insights.json + data/insights_work/insights_values.json),
+  verify_insights.py (independent pure-Python recomputation, quote check against PDF text, sources, contract shape, title word claims -> data/insights_work/verify_insights.json;
+  0 failures), screen_candidates.py (13 dropped/folded candidates -> data/insights_work/insights_screening.json), fairness_review_insights.py (Opus review). Added to run_all.sh.
+  19 insights (17 robust, 2 fragile). Opus fairness review pass 1 + pass 2 applied (decisions: data/insights_work/fairness_decisions.json). verify_insights.py: 314 values, 33 quotes, 55 chart arrays, 0 failures (2 warnings: exported dollar pages off by one for two BLA findings; amounts found on adjacent page). Bundled with site/tools/bundle.py (au-insights, 19 insights). Insights spend $12.18 (task prefix insights_).

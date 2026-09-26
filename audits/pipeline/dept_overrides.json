@@ -1,0 +1,10 @@
+{
+  "_note": "Analyst overrides for department canonicalization (checked against City org structure). Keys are raw strings from extraction.",
+  "Mayor's Office of Civic Engagement and Immigrant Affairs": "City Administrator",
+  "Office of Civic Engagement and Immigrant Affairs": "City Administrator",
+  "OCEIA": "City Administrator",
+  "OCEIA (MOD referred item R1b to Office of Civic Engagement and Immigrant Affairs as they are responsible for language support.)": "City Administrator",
+  "Office of the County Clerk": "City Administrator",
+  "Grants for the Arts": "City Administrator",
+  "Office of the Agricultural Commissioner": "Public Health"
+}

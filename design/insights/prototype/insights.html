@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Budget vs outcomes: insights · SF City Monitor (prototype)</title>
+<!-- The site's visual system (tokens, shell, cards, tables, tooltip, data strip) plus this page's styles. -->
+<link rel="stylesheet" href="../../prototype/css/app.css">
+<link rel="stylesheet" href="css/insights.css">
+<script>
+  // Apply theme before first paint: URL ?theme= wins, then saved preference, then OS.
+  (function () {
+    const q = new URLSearchParams(location.search).get('theme');
+    let saved = null; try { saved = localStorage.getItem('sfcm-theme'); } catch (e) { /* ignore */ }
+    const t = q || saved || 'auto';
+    const dark = t === 'dark' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  })();
+</script>
+</head>
+<body data-explore-base="../../prototype/index.html">
+<a class="sr-only" href="#content">Skip to content</a>
+<div class="app">
+  <nav class="sidebar" aria-label="Dashboards and views">
+    <div class="brand">
+      <div class="brand-title"><span class="mark"><i></i></span>SF City Monitor</div>
+      <div class="brand-sub">San Francisco government, in public data</div>
+      <div style="margin-top:8px"><span class="badge badge-sample">Prototype · synthetic sample data</span></div>
+    </div>
+    <div class="dash-switch" id="dash-switch"></div>
+    <div id="nav"></div>
+    <div class="sidebar-foot">
+      <div id="asof"></div>
+      <div class="shortcuts" style="margin-top:6px"><span><kbd>j</kbd> <kbd>k</kbd> insights</span><span><kbd>e</kbd> evidence</span><span><kbd>o</kbd> explore</span><span><kbd>c</kbd> copy link</span><span><kbd>d</kbd> dark</span><span><kbd>?</kbd> help</span></div>
+    </div>
+  </nav>
+  <div class="main">
+    <header class="topbar">
+      <span class="sample-note">All numbers are <b>synthetic sample insights</b> for design review; they follow the shape of the module's published facts but are not findings.</span>
+      <span class="spacer"></span>
+      <button class="icon-btn" id="print-btn" title="Print or save as PDF with every insight's evidence open">Print</button>
+      <button class="icon-btn" id="theme-toggle" aria-pressed="false" title="Toggle dark mode (d)">
+        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M7 1.5a5.5 5.5 0 0 1 0 11z" fill="currentColor"/></svg>
+        Dark
+      </button>
+      <button class="icon-btn" id="share-btn" title="Copy a link to this page with the current filters">Copy link</button>
+    </header>
+    <div class="filterbar" id="filterbar" role="region" aria-label="Filters"></div>
+    <main class="content ins-content" id="content" tabindex="-1">
+      <div id="ins-header"></div>
+      <div id="ins-data"></div>
+      <div id="ins-glance"></div>
+      <div id="ins-cards"></div>
+      <div id="ins-foot"></div>
+    </main>
+  </div>
+</div>
+<div class="help" id="help" hidden role="dialog" aria-label="Keyboard shortcuts">
+  <div class="help-box">
+    <div class="help-top"><b>Keyboard</b><button class="link" id="help-close" type="button">Close</button></div>
+    <dl>
+      <dt><kbd>j</kbd> / <kbd>k</kbd> or <kbd>↓</kbd> / <kbd>↑</kbd></dt><dd>next / previous insight</dd>
+      <dt><kbd>e</kbd> or <kbd>Enter</kbd></dt><dd>open or close the evidence</dd>
+      <dt><kbd>o</kbd></dt><dd>explore this insight in the dashboard</dd>
+      <dt><kbd>c</kbd></dt><dd>copy a link to this insight</dd>
+      <dt><kbd>t</kbd></dt><dd>chart as a table</dd>
+      <dt><kbd>d</kbd></dt><dd>dark mode</dd>
+      <dt><kbd>Tab</kbd></dt><dd>every chart mark, link and button; a mark shows its tooltip on focus</dd>
+      <dt><kbd>Esc</kbd></dt><dd>close this help, clear the current insight</dd>
+    </dl>
+  </div>
+</div>
+<script src="sample-data/insights.sample.js"></script>
+<script src="js/insights-charts.js"></script>
+<script src="js/insights.js"></script>
+</body>
+</html>

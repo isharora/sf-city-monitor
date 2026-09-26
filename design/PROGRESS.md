@@ -12,3 +12,4 @@
 
 ## Paths
 - design/DESIGN.md, design/DATA_CONTRACT_*.md, design/prototype/index.html, design/prototype/js/*.js, design/prototype/css/app.css, design/prototype/sample-data/generate.py, design/shots/
+- design/insights/: insights-first front door per dashboard (INSIGHTS_DESIGN.md, prototype/insights.html with sample insights.json covering all 9 chart types, shots/ in light and dark). Next: engineer integrates as pf-insights etc. (see INSIGHTS_DESIGN.md §11); analysts export <module>/data/site/insights/insights.json.

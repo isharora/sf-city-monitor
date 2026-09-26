@@ -1,0 +1,34 @@
+# nonprofits PROGRESS
+## Done
+- Folders: pipeline/, data/raw, data/interim, data/site, data/cache
+- Datasets verified: n9pm-xkyq Vendor Payments (8.17M rows, FY2007-FY2027 partial; legacy FAMIS codes FY2007-17, PeopleSoft codes after); cqi5-hm2d Supplier Contracts (49,186 rows; only current awarded amount, no original).
+- data/raw/supplier_contracts.csv (current), data/raw/wayback/supplier_contracts_{20210422,20221206,20251102}.csv (Wayback snapshots -> amendment growth)
+- data/raw/irs/: eo1-4.csv, eo_ca.csv (BMF), data-download-revocation.txt, efile/index_2017..2026.csv
+- pipeline/01_fetch_payments.py (agg per FY -> data/raw/payments_agg_fy*.csv; 'timing' mode for data_as_of daily) -- running in background (log data/raw/fetch_agg.log)
+- pipeline/02_irs_master.py -> data/interim/irs_orgs.parquet, irs_names.parquet, efile_index_all.parquet
+- pipeline/lib_names.py normalization
+- Background research agents: reviews -> data/reviews/ (reviews.json, org_findings.json); outcomes -> data/outcomes/ (outcomes.csv, sources.md)
+## Next
+- finish payments fetch; build vendor universe; candidate matching (03), Claude adjudication (04), validation sample (05)
+- 990: ProPublica API + IRS XML via HTTP range reads of TEOS zips
+- [06:58] Payments fetched (21 FY files) -> 03_build_payments.py -> data/interim/payments.parquet (647,519 agg rows; totals verified vs server sums)
+- Candidates: 04_candidates.py -> vendors.parquet (10,286 vendors, 99.7% of expenditure $), candidates.parquet
+- Adjudication running: 05_adjudicate.py (pass1 sonnet, pass2 opus) -> matches.parquet; then run 06_discover.py -> matches_final.parquet
+- lib_llm.py (cache data/cache/llm, log data/llm_usage.jsonl, budget stop $600)
+- 07_fetch_990.py (propublica + XML range reads), 08_build_990.py written; zip listings cached data/raw/irs/efile/listing_*.txt
+- Timing fetch (data_as_of daily) running -> data/raw/payments_timing_fy*.csv
+- Reviews agent DONE: data/reviews/reviews.json (75 docs), org_findings.json (1,021 findings incl. monitoring FY22-25 per org)
+- Outcomes agent DONE: data/outcomes/outcomes.csv (598 rows), sources.md
+- Extra datasets: data/raw/city_np/ qkex-vh98 (Controller nonprofit spending FY19-25), rhef-rs9s, 7yeh-dyn4, 3v2z-djjd; CPI data/raw/cu_summaries.txt (CUURS49BSA0)
+- [07:40] Matching done: matches_final.parquet: 1,643 vendors -> 1,518 EINs (pass1 sonnet 4,024 vendors; pass2 opus 294; pass3 discovery 444 targets). LLM spend ~$28.
+- Running 07_fetch_990.py propublica + xml (logs data/interim/fetch_pp.log, fetch_xml.log). Next: 08_build_990 -> 10_core -> 09_link_reviews -> 11_validation_sample (hand review) -> 12_analysis -> site export
+- [08:10] Analysis done: 12_analysis.py (results in data/interim/results/), 13_coverage_validation.py (coverage 95.6% any-signal, 79.8% of city-flagged $ [rest = UC, LLC/LPs, gov], precision 97.5% strict on 120 hand-reviewed), 14_outcomes.py, 15_redteam.py (redteam.json)
+- Validation: data/validation/hand_review.csv (170 rows: 120 accepted + 50 NONE)
+- Site export DONE per design/DATA_CONTRACT_nonprofits.md: 16_export_site.py, 17_commentary_qa.py -> data/site/ (meta, orgs, payments cells FY2007-26, contracts, finances per FY, reviews, commentary, profiles top150, aggregates, CONTRACT_GAPS.md, qa_report.json)
+- Next: ANALYSIS.md, DATA_NOTES.md, run_all.sh, final report
+- [08:40] Opus second-opinion recheck (05b) done: 96.6% agreement; 48 disagreements hand-resolved -> data/manual/match_overrides.csv (+2 validation errors). Downstream rerun complete; site export + QA regenerated.
+- Red team extended (S5 dependency vs monitoring, permutation test).
+- BLOCKED: writing ANALYSIS.md / DATA_NOTES.md via the Write tool is refused for subagents by the harness ("return findings as text"). Draft content was completed; the lead/owner must write or permit these files. All numbers are in data/site/commentary_facts.json and data/interim/results/*.
+- Pipeline runner: pipeline/run_all.sh (00_download.sh ... 17_commentary_qa.py)
+- [red team + commentary pass] pipeline/redteam/ (rt_revocations, rt_findings, rt_contracts_llm, rt_assemble) -> data/redteam/redteam.json (verdicts: 5 robust, 1 fragile, 2 corrected). Fixes at source: 12_analysis (revocation check: posting date, confidence >= 0.9 -> 5 orgs / $1.62M), 14_outcomes (HSH windows flagged, consistent-series comparison), 16_export_site (monitoring notes not truncated, group statements removed; result labels; news statement_type; profile exempt_status; contracts term_end_first_snapshot). Commentary now written by 18_commentary.py; verify_commentary.py traces every number (0 untraced). run_all.sh updated. Red-team LLM spend $3.41.
+- [insights page, 2026-09-26] pipeline/insights/ (fetch_funds, common, compute_build, spec, build_insights, verify_insights, screen_candidates, fairness_review_insights) -> data/site/insights/insights.json (18 insights: 16 robust, 2 fragile). New raw input: data/raw/insights/payments_fund_fy2016-2026.csv (Vendor Payments by fund; reconciles to the cells exactly). verify_insights.py: 294 values, 542 chart points, 74 sources, 0 failures (data/insights/verify_insights.json). Screening of 12 dropped/folded candidates: data/insights/insights_screening.json. Opus fairness review, two passes ($1.71): data/insights/fairness_review_insights*.json, decisions in data/insights/fairness_decisions.json. Added to run_all.sh; site bundled (np-insights OK).

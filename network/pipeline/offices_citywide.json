@@ -1,0 +1,590 @@
+{
+ "about": "Verified office history for San Francisco's citywide elective offices (Mayor, District Attorney, City Attorney, Sheriff, Treasurer, Assessor-Recorder, Public Defender), one row per term including appointed, interim and acting terms. Every row cites a source URL and a quote that `python3 pipeline/roster.py verify` finds in the cached source (data/raw/offices/). Official sources are City pages (sf.gov, sfmayor.org, sfbos.org minutes, department sites), current or archived by the Internet Archive; Wikipedia is used only as a pointer for exact days, noted in date_note. The succession of each office is complete from 2009-01-01 to as_of, so anyone not listed held none of these offices in 2009-2026. Temporary service as Acting Mayor while the Mayor is out of the state (Charter) is not counted.",
+ "built": "2026-09-26",
+ "as_of": "2026-09-26",
+ "roles": {
+  "elected": "took office after winning an election",
+  "appointed": "appointed to fill a vacancy (most were later elected; see how)",
+  "interim": "appointed to serve only until an election winner or a returning officeholder took office",
+  "acting": "performed the duties of the office by operation of the Charter"
+ },
+ "known_vacancies": [
+  {
+   "office": "Assessor-Recorder",
+   "from": "2012-12-03",
+   "to": "2013-02-06",
+   "note": "Seat vacant between Ting's move to the Assembly and Chu's appointment; the office was run by staff."
+  }
+ ],
+ "terms": [
+  {
+   "id": "mayor-newsom",
+   "person": "Gavin Newsom",
+   "official_key": "NEWSOM|GAVIN",
+   "office": "Mayor",
+   "role": "elected",
+   "start": "2004-01-08",
+   "end": "2011-01-10",
+   "how": "Elected 2003, re-elected 2007; left to become Lieutenant Governor.",
+   "source_url": "https://sfmayor.org/article/former-mayor-edwin-m-lee-memorialized-official-photo-and-opening-new-exhibit-his-honor",
+   "source_quote": "replacing Mayor Gavin Newsom, who left to become Lieutenant Governor of California",
+   "source_kind": "official (archived)",
+   "archived_url": "http://web.archive.org/web/2019id_/https://sfmayor.org/article/former-mayor-edwin-m-lee-memorialized-official-photo-and-opening-new-exhibit-his-honor",
+   "more_sources": [
+    {
+     "url": "http://www.sfmayor.org/",
+     "quote": "Mayor Newsom joined with City departments",
+     "kind": "official (archived home page, Oct 2009)",
+     "archived_url": "http://web.archive.org/web/20090601id_/http://www.sfmayor.org/"
+    }
+   ],
+   "date_note": "Exact start and end days from https://en.wikipedia.org/wiki/Gavin_Newsom (pointer); the official sources confirm he held the office in 2009 and until the 2011 appointment of his successor."
+  },
+  {
+   "id": "mayor-lee-interim",
+   "person": "Edwin M. Lee",
+   "official_key": "LEE|EDWIN",
+   "office": "Mayor",
+   "role": "interim",
+   "start": "2011-01-11",
+   "end": "2012-01-08",
+   "how": "Appointed by the Board of Supervisors to fill the vacancy left by Newsom.",
+   "source_url": "https://sfmayor.org/article/former-mayor-edwin-m-lee-memorialized-official-photo-and-opening-new-exhibit-his-honor",
+   "source_quote": "Mayor Lee was first appointed to the position on an interim basis in 2011",
+   "source_kind": "official (archived)",
+   "archived_url": "http://web.archive.org/web/2019id_/https://sfmayor.org/article/former-mayor-edwin-m-lee-memorialized-official-photo-and-opening-new-exhibit-his-honor",
+   "more_sources": [],
+   "date_note": "Days from https://en.wikipedia.org/wiki/Ed_Lee_(politician) (pointer); the interim term ran until his elected term began in January 2012."
+  },
+  {
+   "id": "mayor-lee",
+   "person": "Edwin M. Lee",
+   "official_key": "LEE|EDWIN",
+   "office": "Mayor",
+   "role": "elected",
+   "start": "2012-01-08",
+   "end": "2017-12-12",
+   "how": "Elected November 2011, re-elected 2015; died in office Dec. 12, 2017.",
+   "source_url": "https://sfmayor.org/article/former-mayor-edwin-m-lee-memorialized-official-photo-and-opening-new-exhibit-his-honor",
+   "source_quote": "Mayor Lee was subsequently elected by voters in November 2011, and reelected in 2015",
+   "source_kind": "official (archived)",
+   "archived_url": "http://web.archive.org/web/2019id_/https://sfmayor.org/article/former-mayor-edwin-m-lee-memorialized-official-photo-and-opening-new-exhibit-his-honor",
+   "more_sources": [
+    {
+     "url": "https://sfbos.org/sites/default/files/bag121217_minutes.pdf",
+     "quote": "the 43rd Mayor of San Francisco, Edwin M. Lee, died unexpectedly",
+     "kind": "official"
+    }
+   ]
+  },
+  {
+   "id": "mayor-breed-acting",
+   "person": "London Breed",
+   "official_key": "BREED|LONDON",
+   "office": "Mayor",
+   "role": "acting",
+   "start": "2017-12-12",
+   "end": "2018-01-23",
+   "how": "As President of the Board of Supervisors, became Acting Mayor under the Charter on Mayor Lee's death; also remained District 5 Supervisor.",
+   "source_url": "https://sfbos.org/sites/default/files/bag121217_minutes.pdf",
+   "source_quote": "Board of Supervisors President London Breed assumed the duties of Acting Mayor of San Francisco, effective immediately",
+   "source_kind": "official",
+   "more_sources": [
+    {
+     "url": "https://sfbos.org/sites/default/files/bag012318_minutes.pdf",
+     "quote": "Motion confirming the appointment of Mark Farrell as the successor Mayor",
+     "kind": "official"
+    }
+   ]
+  },
+  {
+   "id": "mayor-farrell-interim",
+   "person": "Mark Farrell",
+   "official_key": "FARRELL|MARK",
+   "office": "Mayor",
+   "role": "interim",
+   "start": "2018-01-23",
+   "end": "2018-07-11",
+   "how": "Appointed successor Mayor by the Board of Supervisors (Motion M18-009 and file 180064) until the winner of the June 5, 2018 special election took office.",
+   "source_url": "https://sfbos.org/sites/default/files/bag012318_minutes.pdf",
+   "source_quote": "for a term that will expire when the winner of the special Mayoral election on June 5, 2018, takes office",
+   "source_kind": "official",
+   "more_sources": [
+    {
+     "url": "https://sfmayor.org/article/mayor-london-n-breed-sworn-today-first-african-american-female-mayor-city-history",
+     "quote": "Mayor London N. Breed was officially sworn in today as the Mayor of San Francisco",
+     "kind": "official (archived)",
+     "archived_url": "http://web.archive.org/web/2024id_/https://sfmayor.org/article/mayor-london-n-breed-sworn-today-first-african-american-female-mayor-city-history"
+    }
+   ]
+  },
+  {
+   "id": "mayor-breed",
+   "person": "London Breed",
+   "official_key": "BREED|LONDON",
+   "office": "Mayor",
+   "role": "elected",
+   "start": "2018-07-11",
+   "end": "2025-01-08",
+   "how": "Won the June 5, 2018 special election; re-elected 2019; lost in 2024.",
+   "source_url": "https://sfmayor.org/article/mayor-london-n-breed-sworn-today-first-african-american-female-mayor-city-history",
+   "source_quote": "Mayor London N. Breed was officially sworn in today as the Mayor of San Francisco",
+   "source_kind": "official (archived)",
+   "archived_url": "http://web.archive.org/web/2024id_/https://sfmayor.org/article/mayor-london-n-breed-sworn-today-first-african-american-female-mayor-city-history",
+   "more_sources": [
+    {
+     "url": "https://www.sf.gov/departments/office-mayor",
+     "quote": "Daniel Lurie is the 46th Mayor of the City and County of San Francisco",
+     "kind": "official"
+    }
+   ],
+   "date_note": "The release header reads \"Wednesday, July 11, 2017\", a typo: it was posted in 2018 and July 11 fell on a Wednesday in 2018. End day from https://en.wikipedia.org/wiki/London_Breed (pointer)."
+  },
+  {
+   "id": "mayor-lurie",
+   "person": "Daniel Lurie",
+   "official_key": "LURIE|DANIEL",
+   "office": "Mayor",
+   "role": "elected",
+   "start": "2025-01-08",
+   "end": null,
+   "how": "Elected November 2024.",
+   "source_url": "https://www.sf.gov/departments/office-mayor",
+   "source_quote": "Daniel Lurie is the 46th Mayor of the City and County of San Francisco",
+   "source_kind": "official",
+   "more_sources": [],
+   "date_note": "Start day from https://en.wikipedia.org/wiki/Daniel_Lurie (pointer); in office on the as-of date per sf.gov."
+  },
+  {
+   "id": "da-harris",
+   "person": "Kamala D. Harris",
+   "official_key": "HARRIS|KAMALA",
+   "office": "District Attorney",
+   "role": "elected",
+   "start": "2004-01-08",
+   "end": "2011-01-03",
+   "how": "Elected 2003, re-elected 2007; left to become California Attorney General.",
+   "source_url": "http://www.sfdistrictattorney.org/",
+   "source_quote": "Kamala D. Harris, District Attorney",
+   "source_kind": "official (archived home page, Feb 2010)",
+   "archived_url": "http://web.archive.org/web/20100216164148id_/http://www.sfdistrictattorney.org/",
+   "more_sources": [],
+   "date_note": "Days from https://en.wikipedia.org/wiki/Kamala_Harris (pointer)."
+  },
+  {
+   "id": "da-gascon",
+   "person": "George Gascón",
+   "official_key": "GASCON|GEORGE",
+   "office": "District Attorney",
+   "role": "appointed",
+   "start": "2011-01-09",
+   "end": "2019-10-18",
+   "how": "Appointed by Mayor Newsom to fill the vacancy; elected November 2011, re-elected 2015; resigned effective Oct. 18, 2019.",
+   "source_url": "http://sfdistrictattorney.org/",
+   "source_quote": "George Gascón, District Attorney",
+   "source_kind": "official (archived home page, Apr 2011)",
+   "archived_url": "http://web.archive.org/web/20110423180516id_/http://sfdistrictattorney.org/",
+   "more_sources": [
+    {
+     "url": "http://sfmayor.org/article/mayor-london-breed-announces-appointment-suzy-loftus-serve-district-attorney",
+     "quote": "following District Attorney George Gascón’s resignation on October 18",
+     "kind": "official (archived)",
+     "archived_url": "http://web.archive.org/web/2024id_/http://sfmayor.org/article/mayor-london-breed-announces-appointment-suzy-loftus-serve-district-attorney"
+    }
+   ],
+   "date_note": "Start day from https://en.wikipedia.org/wiki/George_Gasc%C3%B3n (pointer)."
+  },
+  {
+   "id": "da-loftus-interim",
+   "person": "Suzy Loftus",
+   "official_key": "LOFTUS|SUZY",
+   "office": "District Attorney",
+   "role": "interim",
+   "start": "2019-10-19",
+   "end": "2020-01-08",
+   "how": "Appointed interim District Attorney by Mayor Breed for the rest of Gascón's term (announced Oct. 4, 2019); stayed until her successor took office.",
+   "source_url": "http://sfmayor.org/article/mayor-london-breed-announces-appointment-suzy-loftus-serve-district-attorney",
+   "source_quote": "Mayor London N. Breed today announced she will appoint Suzy Loftus to serve as District Attorney",
+   "source_kind": "official (archived)",
+   "archived_url": "http://web.archive.org/web/2024id_/http://sfmayor.org/article/mayor-london-breed-announces-appointment-suzy-loftus-serve-district-attorney",
+   "more_sources": [
+    {
+     "url": "http://sfmayor.org/article/mayor-breed-announces-transition-plan-district-attorney",
+     "quote": "Interim District Attorney Suzy Loftus will stay in office until January 8th",
+     "kind": "official (archived)",
+     "archived_url": "http://web.archive.org/web/2024id_/http://sfmayor.org/article/mayor-breed-announces-transition-plan-district-attorney"
+    }
+   ],
+   "date_note": "Start taken as the day after Gascón's resignation took effect (Oct. 18, 2019); the sources do not give the swearing-in day. Wikipedia gives Oct. 4, the announcement date."
+  },
+  {
+   "id": "da-boudin",
+   "person": "Chesa Boudin",
+   "official_key": "BOUDIN|CHESA",
+   "office": "District Attorney",
+   "role": "elected",
+   "start": "2020-01-08",
+   "end": "2022-07-08",
+   "how": "Elected November 2019; removed by the recall election of June 7, 2022; successor appointed July 8, 2022.",
+   "source_url": "http://sfmayor.org/article/mayor-breed-announces-transition-plan-district-attorney",
+   "source_quote": "DA-Elect Boudin requested that Loftus continue to serve until he’s prepared to assume the post",
+   "source_kind": "official (archived)",
+   "archived_url": "http://web.archive.org/web/2024id_/http://sfmayor.org/article/mayor-breed-announces-transition-plan-district-attorney",
+   "more_sources": [
+    {
+     "url": "http://sfmayor.org/article/mayor-london-breed-announces-appointment-brooke-jenkins-serve-san-francisco-district",
+     "quote": "following the recall of DA Chesa Boudin on June 7, 2022",
+     "kind": "official (archived)",
+     "archived_url": "http://web.archive.org/web/2024id_/http://sfmayor.org/article/mayor-london-breed-announces-appointment-brooke-jenkins-serve-san-francisco-district"
+    },
+    {
+     "url": "https://sfdistrictattorney.org/",
+     "quote": "hosted by DA Boudin",
+     "kind": "official (archived home page, 2021)",
+     "archived_url": "http://web.archive.org/web/2021id_/https://sfdistrictattorney.org/"
+    }
+   ],
+   "date_note": "End taken as the day his successor was appointed; the recall result took effect on certification in the weeks after June 7, 2022."
+  },
+  {
+   "id": "da-jenkins",
+   "person": "Brooke Jenkins",
+   "official_key": "JENKINS|BROOKE",
+   "office": "District Attorney",
+   "role": "appointed",
+   "start": "2022-07-08",
+   "end": null,
+   "how": "Appointed by Mayor Breed after the recall; elected November 2022, re-elected 2024.",
+   "source_url": "https://sfdistrictattorney.org/about-us/",
+   "source_quote": "She was first appointed District Attorney by San Francisco Mayor London N. Breed on July 8, 2022, and later elected by the voters on November 8, 2022",
+   "source_kind": "official",
+   "more_sources": []
+  },
+  {
+   "id": "ca-herrera",
+   "person": "Dennis Herrera",
+   "official_key": "HERRERA|DENNIS",
+   "office": "City Attorney",
+   "role": "elected",
+   "start": "2002-01-08",
+   "end": "2021-10-31",
+   "how": "Elected 2001 and re-elected through 2019; left to become General Manager of the SFPUC.",
+   "source_url": "http://sfmayor.org/article/mayor-london-breed-swears-david-chiu-san-francisco-city-attorney",
+   "source_quote": "replaces Dennis Herrera, who served as City Attorney since 2001",
+   "source_kind": "official (archived)",
+   "archived_url": "http://web.archive.org/web/2024id_/http://sfmayor.org/article/mayor-london-breed-swears-david-chiu-san-francisco-city-attorney",
+   "more_sources": [
+    {
+     "url": "http://www.sfcityattorney.org/",
+     "quote": "DENNIS J. HERRERA City Attorney of San Francisco",
+     "kind": "official (archived home page, 2010)",
+     "archived_url": "http://web.archive.org/web/2010id_/http://www.sfcityattorney.org/"
+    }
+   ],
+   "date_note": "Start day from https://en.wikipedia.org/wiki/Dennis_Herrera (pointer); end is the day before his successor was sworn in (Nov. 1, 2021)."
+  },
+  {
+   "id": "ca-chiu",
+   "person": "David Chiu",
+   "official_key": "CHIU|DAVID",
+   "office": "City Attorney",
+   "role": "appointed",
+   "start": "2021-11-01",
+   "end": null,
+   "how": "Appointed by Mayor Breed to fill the vacancy; later elected.",
+   "source_url": "http://sfmayor.org/article/mayor-london-breed-swears-david-chiu-san-francisco-city-attorney",
+   "source_quote": "Mayor London N. Breed today swore in David Chiu as San Francisco’s new City Attorney",
+   "source_kind": "official (archived)",
+   "archived_url": "http://web.archive.org/web/2024id_/http://sfmayor.org/article/mayor-london-breed-swears-david-chiu-san-francisco-city-attorney",
+   "more_sources": [
+    {
+     "url": "https://www.sfcityattorney.org/",
+     "quote": "About City Attorney David Chiu",
+     "kind": "official"
+    }
+   ]
+  },
+  {
+   "id": "sheriff-hennessey",
+   "person": "Michael Hennessey",
+   "official_key": "HENNESSEY|MICHAEL",
+   "office": "Sheriff",
+   "role": "elected",
+   "start": "1980-01-08",
+   "end": "2012-01-08",
+   "how": "Elected 1979 and re-elected through 2007; retired.",
+   "source_url": "https://sfsohistory.com/reference/chronological-list-of-san-francisco-sheriffs",
+   "source_quote": "Michael Hennessey 1980-2012",
+   "source_kind": "department history site (sfsohistory.com, sponsored by the SF Sheriff's Managers & Supervisors Association); no official page found",
+   "more_sources": [],
+   "date_note": "Days follow the Charter inauguration date (Jan. 8); year-level only in the source."
+  },
+  {
+   "id": "sheriff-mirkarimi",
+   "person": "Ross Mirkarimi",
+   "official_key": "MIRKARIMI|ROSS",
+   "office": "Sheriff",
+   "role": "elected",
+   "start": "2012-01-08",
+   "end": "2016-01-08",
+   "how": "Elected November 2011; suspended by the Mayor Mar. 19 to Oct. 9, 2012 (the Board of Supervisors did not sustain the misconduct charges); lost in 2015. He held the office throughout, including while suspended.",
+   "source_url": "https://sfsohistory.com/reference/chronological-list-of-san-francisco-sheriffs",
+   "source_quote": "Ross Mirkarimi 2012-2016",
+   "source_kind": "department history site (sfsohistory.com)",
+   "more_sources": [
+    {
+     "url": "http://sfmayor.org/mayor-lee-suspends-ross-mirkarimi-appoints-law-enforcement-veteran-vicki-hennessy",
+     "quote": "Mayor Edwin M. Lee today announced he is suspending Sheriff Mirkarimi",
+     "kind": "official (archived)",
+     "archived_url": "http://web.archive.org/web/2013id_/http://sfmayor.org/mayor-lee-suspends-ross-mirkarimi-appoints-law-enforcement-veteran-vicki-hennessy"
+    },
+    {
+     "url": "http://sfmayor.org/article/mayor-lee%E2%80%99s-statement-board-supervisors%E2%80%99-vote-ross-mirkarimi-official-misconduct-charges",
+     "quote": "against sustaining charges of official misconduct against Ross Mirkarimi",
+     "kind": "official (archived)",
+     "archived_url": "http://web.archive.org/web/2019id_/http://sfmayor.org/article/mayor-lee%E2%80%99s-statement-board-supervisors%E2%80%99-vote-ross-mirkarimi-official-misconduct-charges"
+    },
+    {
+     "url": "http://www.sfsheriff.com/",
+     "quote": "Sheriff Mirkarimi",
+     "kind": "official (archived home page, 2013)",
+     "archived_url": "http://web.archive.org/web/2013id_/http://www.sfsheriff.com/"
+    }
+   ]
+  },
+  {
+   "id": "sheriff-hennessy-interim",
+   "person": "Vicki Hennessy",
+   "official_key": "HENNESSY|VICKI",
+   "office": "Sheriff",
+   "role": "interim",
+   "start": "2012-03-19",
+   "end": "2012-10-09",
+   "how": "Appointed by Mayor Lee to lead the Sheriff's Department while Sheriff Mirkarimi was suspended; ended when the Board of Supervisors voted not to sustain the charges (Oct. 9, 2012).",
+   "source_url": "http://sfmayor.org/mayor-lee-suspends-ross-mirkarimi-appoints-law-enforcement-veteran-vicki-hennessy",
+   "source_quote": "appointing veteran law enforcement official Vicki Hennessy as Sheriff",
+   "source_kind": "official (archived)",
+   "archived_url": "http://web.archive.org/web/2013id_/http://sfmayor.org/mayor-lee-suspends-ross-mirkarimi-appoints-law-enforcement-veteran-vicki-hennessy",
+   "more_sources": [
+    {
+     "url": "http://sfmayor.org/article/mayor-lee%E2%80%99s-statement-board-supervisors%E2%80%99-vote-ross-mirkarimi-official-misconduct-charges",
+     "quote": "Wednesday, October 10, 2012",
+     "kind": "official (archived)",
+     "archived_url": "http://web.archive.org/web/2019id_/http://sfmayor.org/article/mayor-lee%E2%80%99s-statement-board-supervisors%E2%80%99-vote-ross-mirkarimi-official-misconduct-charges"
+    }
+   ],
+   "concurrent_with": "sheriff-mirkarimi",
+   "date_note": "End is the evening of the Board vote reported in the Mayor's statement of Oct. 10, 2012."
+  },
+  {
+   "id": "sheriff-hennessy",
+   "person": "Vicki Hennessy",
+   "official_key": "HENNESSY|VICKI",
+   "office": "Sheriff",
+   "role": "elected",
+   "start": "2016-01-08",
+   "end": "2020-01-08",
+   "how": "Elected November 2015; did not run in 2019.",
+   "source_url": "https://sfsohistory.com/reference/chronological-list-of-san-francisco-sheriffs",
+   "source_quote": "Vicki Hennessy 2016-2020",
+   "source_kind": "department history site (sfsohistory.com)",
+   "more_sources": [
+    {
+     "url": "https://sfmayor.org/article/mayor-london-breed-sheriff-vicki-hennessys-announced-retirement",
+     "quote": "Sheriff Hennessy has been a tremendous leader for our City",
+     "kind": "official (archived)",
+     "archived_url": "http://web.archive.org/web/2019id_/https://sfmayor.org/article/mayor-london-breed-sheriff-vicki-hennessys-announced-retirement"
+    },
+    {
+     "url": "https://www.sfsheriff.com/",
+     "quote": "Sheriff Hennessy's letter",
+     "kind": "official (archived home page, 2017)",
+     "archived_url": "http://web.archive.org/web/2017id_/https://www.sfsheriff.com/"
+    }
+   ]
+  },
+  {
+   "id": "sheriff-miyamoto",
+   "person": "Paul Miyamoto",
+   "official_key": "MIYAMOTO|PAUL",
+   "office": "Sheriff",
+   "role": "elected",
+   "start": "2020-01-08",
+   "end": null,
+   "how": "Elected November 2019, re-elected 2023.",
+   "source_url": "https://sfsheriff.com/about",
+   "source_quote": "Led by elected Sheriff Paul Miyamoto",
+   "source_kind": "official",
+   "more_sources": [
+    {
+     "url": "https://sfsohistory.com/reference/chronological-list-of-san-francisco-sheriffs",
+     "quote": "Paul Miyamoto 2020-2028",
+     "kind": "department history site (sfsohistory.com)"
+    },
+    {
+     "url": "https://www.sfsheriff.com/",
+     "quote": "Sheriff Miyamoto",
+     "kind": "official (archived home page, 2020)",
+     "archived_url": "http://web.archive.org/web/2020id_/https://www.sfsheriff.com/"
+    }
+   ]
+  },
+  {
+   "id": "treasurer-leal",
+   "person": "Susan Leal",
+   "official_key": "LEAL|SUSAN",
+   "office": "Treasurer",
+   "role": "appointed",
+   "start": "1997-01-01",
+   "end": "2004-01-01",
+   "how": "Treasurer before Cisneros; outside the 2009-2026 analysis window.",
+   "source_url": "http://www.sfgov.org/site/treasurer_index.asp",
+   "source_quote": "Treasurer Susan Leal Brings In $10.2 Million",
+   "source_kind": "official (archived home page, 2003)",
+   "archived_url": "http://web.archive.org/web/2003id_/http://www.sfgov.org/site/treasurer_index.asp",
+   "more_sources": [],
+   "start_precision": "year",
+   "end_precision": "year",
+   "date_note": "The official source confirms she was Treasurer in 2003; the 1997-2004 span is from https://en.wikipedia.org/wiki/Susan_Leal (pointer)."
+  },
+  {
+   "id": "treasurer-cisneros",
+   "person": "José Cisneros",
+   "official_key": "CISNEROS|JOSE",
+   "office": "Treasurer",
+   "role": "appointed",
+   "start": "2004-01-01",
+   "end": null,
+   "how": "Appointed in 2004, first elected in 2005, re-elected since.",
+   "source_url": "https://sftreasurer.org/",
+   "source_quote": "Appointed in 2004, and first elected in 2005",
+   "source_kind": "official",
+   "more_sources": [],
+   "key_aliases": [
+    "CISNEROS|JOS"
+   ],
+   "start_precision": "year"
+  },
+  {
+   "id": "assessor-ting",
+   "person": "Phil Ting",
+   "official_key": "TING|PHILIP",
+   "office": "Assessor-Recorder",
+   "role": "elected",
+   "start": "2005-01-01",
+   "end": "2012-12-03",
+   "how": "Assessor-Recorder until he joined the State Assembly in December 2012.",
+   "source_url": "http://sfmayor.org/article/mayor-lee-announces-carmen-chu-assessor-recorder",
+   "source_quote": "filling the vacancy left by Phil Ting who became California Assemblymember of the 19th Assembly district in December 2012",
+   "source_kind": "official (archived)",
+   "archived_url": "http://web.archive.org/web/2019id_/http://sfmayor.org/article/mayor-lee-announces-carmen-chu-assessor-recorder",
+   "more_sources": [
+    {
+     "url": "http://www.sfassessor.org/",
+     "quote": "Phil Ting, Assessor-Recorder",
+     "kind": "official (archived home page, 2010)",
+     "archived_url": "http://web.archive.org/web/2010id_/http://www.sfassessor.org/"
+    }
+   ],
+   "start_precision": "year",
+   "date_note": "End day from https://en.wikipedia.org/wiki/Phil_Ting (pointer)."
+  },
+  {
+   "id": "assessor-chu",
+   "person": "Carmen Chu",
+   "official_key": "CHU|CARMEN",
+   "office": "Assessor-Recorder",
+   "role": "appointed",
+   "start": "2013-02-06",
+   "end": "2021-02-02",
+   "how": "Appointed by Mayor Lee (announced Feb. 6, 2013); elected 2013, re-elected 2014 and 2018; left to become City Administrator.",
+   "source_url": "http://sfmayor.org/article/mayor-lee-announces-carmen-chu-assessor-recorder",
+   "source_quote": "Mayor Edwin M. Lee today announced his intention to appoint District 4 Supervisor Carmen Chu as Assessor-Recorder",
+   "source_kind": "official (archived)",
+   "archived_url": "http://web.archive.org/web/2019id_/http://sfmayor.org/article/mayor-lee-announces-carmen-chu-assessor-recorder",
+   "more_sources": [
+    {
+     "url": "https://sfmayor.org/article/carmen-chu-sworn-san-franciscos-city-administrator",
+     "quote": "Carmen Chu Sworn In as San Francisco's City Administrator",
+     "kind": "official (archived)",
+     "archived_url": "http://web.archive.org/web/2019id_/https://sfmayor.org/article/carmen-chu-sworn-san-franciscos-city-administrator"
+    },
+    {
+     "url": "http://www.sfassessor.org/",
+     "quote": "Assessor-Recorder Carmen Chu",
+     "kind": "official (archived home page, 2015)",
+     "archived_url": "http://web.archive.org/web/2015id_/http://www.sfassessor.org/"
+    }
+   ],
+   "start_precision": "approximate",
+   "date_note": "Start is the announcement date; she was sworn in shortly after. End is the day she was sworn in as City Administrator."
+  },
+  {
+   "id": "assessor-torres",
+   "person": "Joaquín Torres",
+   "official_key": "TORRES|JOAQUIN",
+   "office": "Assessor-Recorder",
+   "role": "appointed",
+   "start": "2021-02-08",
+   "end": null,
+   "how": "Appointed by Mayor Breed; elected Feb. 15, 2022, and since.",
+   "source_url": "https://sfmayor.org/article/joaqu%C3%ADn-torres-sworn-san-franciscos-assessor-recorder",
+   "source_quote": "Today Mayor London N. Breed conducted the swearing-in ceremony for Joaquín Torres as the new Assessor-Recorder",
+   "source_kind": "official (archived)",
+   "archived_url": "http://web.archive.org/web/2024id_/https://sfmayor.org/article/joaqu%C3%ADn-torres-sworn-san-franciscos-assessor-recorder",
+   "more_sources": [
+    {
+     "url": "https://www.sfassessor.org/",
+     "quote": "Joaquín Torres",
+     "kind": "official"
+    }
+   ]
+  },
+  {
+   "id": "pd-adachi",
+   "person": "Jeff Adachi",
+   "official_key": "ADACHI|JEFFREY",
+   "office": "Public Defender",
+   "role": "elected",
+   "start": "2003-01-08",
+   "end": "2019-02-22",
+   "how": "Elected 2002 and re-elected through 2018; died in office.",
+   "source_url": "https://sfmayor.org/article/statement-mayor-london-breed-passing-public-defender-jeff-adachi",
+   "source_quote": "San Francisco Public Defender Jeff Adachi, who died tonight at the age of 59",
+   "source_kind": "official (archived)",
+   "archived_url": "http://web.archive.org/web/2019id_/https://sfmayor.org/article/statement-mayor-london-breed-passing-public-defender-jeff-adachi",
+   "more_sources": [
+    {
+     "url": "http://www.sfpublicdefender.org/",
+     "quote": "Led by Jeff Adachi",
+     "kind": "official (archived home page, 2010)",
+     "archived_url": "http://web.archive.org/web/2010id_/http://www.sfpublicdefender.org/"
+    }
+   ],
+   "date_note": "Days from https://en.wikipedia.org/wiki/Jeff_Adachi (pointer)."
+  },
+  {
+   "id": "pd-raju",
+   "person": "Manohar Raju",
+   "official_key": "RAJU|MANOHAR",
+   "office": "Public Defender",
+   "role": "appointed",
+   "start": "2019-03-11",
+   "end": null,
+   "how": "Named by Mayor Breed on Mar. 11, 2019 to fill the vacancy; elected November 2019 and since.",
+   "source_url": "http://sfmayor.org/article/mayor-london-breed-names-manohar-raju-serve-san-francisco-public-defender",
+   "source_quote": "Today Mayor London N. Breed announced she has selected Deputy Public Defender Manohar Raju to serve as the next San Francisco Public Defender",
+   "source_kind": "official (archived)",
+   "archived_url": "http://web.archive.org/web/2024id_/http://sfmayor.org/article/mayor-london-breed-names-manohar-raju-serve-san-francisco-public-defender",
+   "more_sources": [
+    {
+     "url": "https://sfpublicdefender.org/",
+     "quote": "San Francisco Public Defender Manohar Raju",
+     "kind": "official"
+    }
+   ],
+   "start_precision": "approximate",
+   "date_note": "Start is the date he was named; a ceremonial swearing-in was held May 8, 2019."
+  }
+ ]
+}

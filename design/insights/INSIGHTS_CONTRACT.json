@@ -1,0 +1,35 @@
+{
+  "_doc": "Contract for an insights-first page: one JSON file per dashboard at <module>/data/site/insights/insights.json. The page leads with ~20 ranked findings; each has one focused chart and links into the full dashboard. Every number must trace to a source (checked by the module's verify script).",
+  "sample": false,
+  "as_of": "YYYY-MM-DD",
+  "dashboard": "performance",
+  "intro": "2-3 sentences: what these insights are and how they were chosen and tested.",
+  "insights": [
+    {
+      "id": "fire-demand-outgrew-capacity",
+      "rank": 1,
+      "theme": "one of: spending-growth | outcomes | efficiency | staffing | budgeting-practice | measurement | capital | equity | other",
+      "title": "A claim in plain words, under ~90 characters, e.g. 'Fire/EMS calls rose 51% while real Fire spending rose 16%'",
+      "dek": "1-2 sentences: the finding and its context.",
+      "why_it_matters": "1-3 sentences: why this is worth discussing (the policy or public stake), without implying wrongdoing.",
+      "surprise": "optional: what a reader would naively expect, and why this differs",
+      "numbers": [ { "label": "Fire/EMS calls, FY2013 → FY2025", "value": "121,148 → 182,458 (+51%)", "source": "path/to/file.json#field or report id and page" } ],
+      "chart": {
+        "type": "line | bar | hbar | dumbbell | slope | stacked | smallmultiples | scatter | waterfall",
+        "title": "chart title",
+        "subtitle": "what's plotted, units, real vs nominal",
+        "x": { "label": "Fiscal year", "values": [2013, 2014] },
+        "y": { "label": "Index (FY2013 = 100)", "unit": "index | $ | $M | $B | % | min | count" },
+        "series": [ { "name": "Calls", "values": [100, 104] } ],
+        "annotations": [ { "x": 2020, "label": "COVID" } ],
+        "highlight": "optional: series name or category to emphasize (others greyed)",
+        "note": "source line and definitions"
+      },
+      "robustness": { "verdict": "robust | fragile", "checks": ["held under national CPI", "held excluding FY2020-21"], "what_could_make_it_wrong": "1-2 sentences" },
+      "caveats": ["short caveat"],
+      "explore": { "view": "pf-outcomes", "params": { "dept": "FIR" }, "label": "See Fire's scorecard" },
+      "departments": ["FIR"],
+      "tags": ["demand", "response times"]
+    }
+  ]
+}
