@@ -100,7 +100,7 @@
 
   // ------------------------------------------------------------------ view checks
   const S = () => M.state;
-  function defaults(view) { const p = { view, id: null, mode: 'explore', data: false }; for (const k of ['years', 'dept', 'area', 'size', 'group', 'real', 'source', 'topic', 'flow', 'etype', 'amt']) p[k] = JSON.parse(JSON.stringify(S().DEFAULTS[k])); return p; }
+  function defaults(view) { const p = { view, id: null, mode: 'explore', data: false }; for (const k of ['years', 'dept', 'area', 'size', 'group', 'real', 'source', 'topic', 'flow', 'etype', 'amt', 'verdict', 'insight', 'evidence']) p[k] = JSON.parse(JSON.stringify(S().DEFAULTS[k])); return p; }
   async function show(patch) { S().set(patch); await M.app.rendered; await new Promise((r) => setTimeout(r, 0)); await M.app.rendered; }
   function fingerprint() {
     const c = document.getElementById('content');
@@ -127,6 +127,7 @@
       if (!M.METAS[dash.id]) { add(dash.id, `${dash.module}: meta available`, false, 'meta.json missing or invalid'); continue; }
       for (const vid of dash.views) {
         const view = M.views[vid];
+        if (view.insights) continue; // insightsChecks() covers these (their filters are in-view: theme, department, verdict)
         const before = consoleErrors.length, errs0 = M.app.errors.length;
         await show(defaults(vid));
         const lv = M.app.lastView || {};
@@ -171,7 +172,7 @@
     const mark = document.querySelector('#content svg.chart g[tabindex]');
     if (!mark) { add('a11y', 'chart marks are focusable', false, 'no focusable mark found'); return; }
     mark.focus();
-    const tip = document.querySelector('.tip');
+    const tip = [...document.querySelectorAll('.tip')].find((t) => !t.hidden) || document.querySelector('.tip');
     add('a11y', 'focusing a chart mark shows the tooltip and names the mark', document.activeElement === mark && tip && !tip.hidden && (mark.getAttribute('aria-label') || '').length > 3, mark.getAttribute('aria-label'));
     const th = document.querySelector('#content .data-table th .th-btn');
     if (th) { th.click(); add('a11y', 'sortable table headers are buttons with aria-sort', !!document.querySelector('#content .data-table th[aria-sort="ascending"], #content .data-table th[aria-sort="descending"]'), ''); }
@@ -210,6 +211,118 @@
     }
   }
 
+  // ------------------------------------------------------------------ insights views (js/views-insights.js)
+  async function insightsChecks() {
+    const I = M.insights, same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+    for (const dash of Object.values(M.dashes)) {
+      const vid = `${dash.id}-insights`, e = M.data.entry(I.fileOf(dash.id));
+      if (!M.views[vid]) { add(vid, 'no Insights view without a valid insights file', !(e && e.status === 'ok') && !dash.views.includes(vid), e ? `file status ${e.status}` : 'no file'); continue; }
+      add(vid, 'listed first in the dashboard navigation and the landing view', dash.views[0] === vid, dash.views.join(','));
+      let data; try { data = await M.data.load(I.fileOf(dash.id)); } catch (err) { add(vid, 'insights file loads', false, err.message); continue; }
+      const n = data.insights.length, byId = Object.fromEntries(data.insights.map((i) => [i.id, i]));
+      // 1. every insight renders a chart, no console or render errors
+      const c0 = consoleErrors.length, e0 = M.app.errors.length;
+      await show(defaults(vid));
+      const cards = [...document.querySelectorAll('#content .ins-card')];
+      add(vid, `renders every insight (${n} cards) with no console or render errors`, cards.length === n && consoleErrors.length === c0 && M.app.errors.length === e0, [`${cards.length} cards`, ...consoleErrors.slice(c0), ...M.app.errors.slice(e0)].join(' | '));
+      const noChart = cards.filter((c) => !c.querySelector('.ins-plot svg.ich') || c.querySelector('.ins-plot .empty')).map((c) => c.id);
+      add(vid, 'every insight draws its chart (an SVG, not "Chart failed to render")', !noChart.length, noChart.join(', ') || `${cards.length} charts`);
+      const noTwin = cards.filter((c) => { const b = c.querySelector('.tbl-btn'); return !b || b.hidden || !I.page.twins[c.id]; }).map((c) => c.id);
+      const noFocus = cards.filter((c) => !c.querySelector('.ins-plot svg [tabindex]')).map((c) => c.id);
+      add(vid, 'every chart has a table twin and focusable marks', !noTwin.length && !noFocus.length, [noTwin.length ? 'no twin: ' + noTwin.join(', ') : '', noFocus.length ? 'no focusable marks: ' + noFocus.join(', ') : ''].filter(Boolean).join(' · ') || 'all');
+      const order = cards.map((c) => +c.dataset.rank);
+      add(vid, 'cards are in rank order 1..n', same(order, data.insights.map((i) => i.rank).sort((a, b) => a - b)) && same(order, [...Array(n)].map((_, k) => k + 1)), order.join(','));
+      // 2. header counts come from the data
+      const title = (document.querySelector('#content .ins-title') || {}).textContent || '';
+      const sum = (k) => +((document.querySelector(`#content .sum-item[data-sum="${k}"] b`) || {}).textContent);
+      const robust = data.insights.filter((i) => i.robustness.verdict === 'robust').length;
+      const themes = new Set(data.insights.map((i) => i.theme)).size, depts = new Set(data.insights.flatMap((i) => i.departments || [])).size;
+      add(vid, `header counts match the data (${n} insights, ${robust} robust, ${n - robust} fragile, ${themes} themes, ${depts} departments)`,
+        title.startsWith(`${n} things the numbers say`) && document.title.includes(`${n} things`) && sum('robust') === robust && sum('fragile') === n - robust && sum('themes') === themes && sum('depts') === depts,
+        `title "${title}"; summary ${sum('robust')}/${sum('fragile')}/${sum('themes')}/${sum('depts')}`);
+      const glance = document.querySelectorAll('#content .glance-item').length, st0 = strip();
+      const nums = data.insights.reduce((a, i) => a + i.numbers.length, 0);
+      add(vid, 'the 30-second list and the data strip count every insight and cited number', glance === n && st0.feeds[0] === n && st0.feeds[1] === nums && st0.feeds[2] > 0, `list ${glance}, strip ${st0.key}`);
+      // 3. filters change the shown set, the list, the cards and the strip together
+      const expectN = (p) => I.applyFilters(data, Object.assign({ topic: [], dept: [], verdict: '' }, p)).length;
+      const cases = [];
+      [...themes.size ? new Set(data.insights.map((i) => i.theme)) : []].forEach((t) => cases.push({ topic: [t] }));
+      const dcount = {}; data.insights.forEach((i) => (i.departments || []).forEach((d) => { dcount[d] = (dcount[d] || 0) + 1; }));
+      Object.keys(dcount).sort((a, b) => dcount[b] - dcount[a]).slice(0, 3).forEach((d) => cases.push({ dept: [d] }));
+      ['robust', 'fragile'].forEach((v) => cases.push({ verdict: v }));
+      cases.push({ topic: [data.insights[0].theme], dept: (data.insights[0].departments || []).slice(0, 1) });
+      for (const c of cases) {
+        const want = expectN(c), c1 = consoleErrors.length;
+        await show(Object.assign(defaults(vid), c));
+        const got = document.querySelectorAll('#content .ins-card').length, gl = document.querySelectorAll('#content .glance-item').length, s1 = strip();
+        const empty = !!document.querySelector('#content .ins-empty'), zero = !!document.querySelector('#content .datastrip .ds-feed.zero');
+        const ok = got === want && (want ? gl === want : gl === 0 && empty && zero) && s1.feeds[0] === want && (want === n ? s1.key === st0.key : s1.key !== st0.key) && consoleErrors.length === c1;
+        add(vid, `filter ${JSON.stringify(c)} shows ${want} of ${n} in the cards, the list and the strip`, ok, `cards ${got}, list ${gl}, strip ${s1.key}${want ? '' : `, empty state ${empty}, strip zero ${zero}`}`);
+      }
+      // 4. URL state: insight= opens that card's evidence; evidence=all opens every panel
+      const target = data.insights[Math.min(2, n - 1)];
+      await show(Object.assign(defaults(vid), { insight: target.id }));
+      const art = document.getElementById(target.id);
+      add(vid, 'insight=<id> marks the card current with its evidence open', !!art && art.classList.contains('current') && !art.querySelector('.ins-evidence').hidden && art.querySelector('.ev-btn').getAttribute('aria-expanded') === 'true', target.id);
+      await show(Object.assign(defaults(vid), { evidence: 'all' }));
+      add(vid, 'evidence=all opens every evidence panel', [...document.querySelectorAll('#content .ins-evidence')].every((x) => !x.hidden) && document.querySelectorAll('#content .ins-evidence').length === n, '');
+      // 5. keyboard: j moves to the first card, e toggles its evidence, Escape clears it
+      await show(defaults(vid));
+      const key = (k, target) => (target || document.body).dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true }));
+      key('j'); const first = document.querySelector('#content .ins-card.current');
+      key('e'); const opened = first && !first.querySelector('.ins-evidence').hidden;
+      key('j'); const second = document.querySelector('#content .ins-card.current');
+      key('Escape'); const cleared = !document.querySelector('#content .ins-card.current');
+      add(vid, 'keyboard: j/k move between cards, e opens the evidence, Esc clears', !!first && first.dataset.rank === '1' && opened && second && second.dataset.rank === '2' && cleared && S().get().insight === '', `first ${first && first.id}, second ${second && second.id}`);
+      // 6. share links carry the view and the insight
+      const perma = document.querySelector('#content .ins-card .ev-foot a');
+      const pq = perma ? new URL(perma.href).searchParams : new URLSearchParams();
+      add(vid, 'share links open this view at the insight', pq.get('view') === vid && pq.get('insight') === data.insights[0].id, perma ? perma.href.split('?')[1] : 'no link');
+      // 7. every Explore link lands on a real view of this dashboard and its parameters take effect
+      const links = [...document.querySelectorAll('#content .ins-card .explore-link')].map((a) => ({ id: a.closest('.ins-card').id, href: a.getAttribute('href') }));
+      for (const { id, href } of links) {
+        const ex = byId[id].explore, q = new URLSearchParams(href.split('?')[1] || ''), target = M.views[ex.view], why = [];
+        if (!target || !(dash.views.includes(ex.view) || ['dept', 'org', 'report', 'official'].includes(ex.view))) { add(vid, `explore link of ${id} lands on a real view`, false, `view ${ex.view} is not a view of this dashboard`); continue; }
+        if (q.get('view') !== ex.view) why.push(`href view ${q.get('view')}`);
+        for (const k in ex.params || {}) if (q.get(k) !== String(ex.params[k])) why.push(`href lacks ${k}=${ex.params[k]}`);
+        const parsed = S().parse('?' + q.toString()), c2 = consoleErrors.length, e2 = M.app.errors.length;
+        const baseP = defaults(ex.view); await show(baseP); const base = strip();
+        await show(Object.assign(defaults(ex.view), parsed, { theme: S().get().theme }));
+        const st = S().get(), lv = M.app.lastView || {};
+        if (lv.id !== ex.view) why.push(`rendered ${lv.id}`);
+        if (lv.unavailable) why.push('view unavailable');
+        if (consoleErrors.length > c2 || M.app.errors.length > e2) why.push('errors: ' + [...consoleErrors.slice(c2), ...M.app.errors.slice(e2)].join(' | '));
+        const applied = [];
+        for (const k in ex.params || {}) {
+          const v = String(ex.params[k]);
+          if (k.startsWith('v.')) { if (st.v[k.slice(2)] !== v) why.push(`${k} not applied`); else applied.push(k); continue; }
+          if (k === 'id') { if (st.id !== v) why.push('id not applied'); else applied.push(k); continue; }
+          if (!(target.filters || []).includes(k)) { why.push(`${ex.view} has no "${k}" filter, so ${k}=${v} does nothing`); continue; }
+          const bar = document.querySelector(`#filterbar .filter[data-filter="${k}"]`);
+          if (!bar) { why.push(`filter bar does not show ${k}`); continue; }
+          if (k === 'years') {
+            const meta = M.METAS[target.dash], [a, b] = v.split('-').map(Number), yb = S().years({ years: [a, b || a] }, meta[M.dashes[target.dash].yearsKey]);
+            const sel = [...bar.querySelectorAll('select')].map((x) => +x.value);
+            if (!same(sel, yb)) why.push(`years shows ${sel.join('-')}, want ${yb.join('-')}`); else applied.push(`years ${yb.join('-')}${same(yb, S().years({ years: null }, meta[M.dashes[target.dash].yearsKey])) ? ' (the full range)' : ''}`);
+          } else if (S().LIST_KEYS.includes(k)) {
+            if (!same(st[k], v.split(',').filter(Boolean)) || !bar.querySelector('.pick-btn.active, .chip[aria-pressed="true"]')) why.push(`${k} not shown as selected`); else applied.push(`${k} ${v}`);
+          } else if (k === 'real') { if (st.real !== (v !== '0')) why.push('real not applied'); else applied.push('real ' + v); }
+        }
+        const after = strip(), nonDefault = Object.keys(ex.params || {}).some((k) => !(k === 'years' && applied.some((x) => /full range/.test(x))));
+        // A years range that covers every record the view has (e.g. staffing data begin in FY2013) is applied (the bar shows it)
+        // but cannot change the counts; any other parameter must change the strip.
+        const onlyYears = Object.keys(ex.params || {}).every((k) => k === 'years');
+        if (nonDefault && after.key === base.key) { if (onlyYears && !why.length) applied.push(`the view's records all fall inside it, so the counts equal the unfiltered view (${base.key})`); else why.push(`the data strip did not change (${base.key})`); }
+        add(vid, `explore link of ${id} opens ${ex.view} with its parameters applied`, !why.length, why.join('; ') || (applied.length ? applied.join(', ') + (nonDefault ? `; strip ${base.key} → ${after.key}` : '') : 'no parameters: opens the view unfiltered'));
+      }
+      // 8. home card links to the insights view and states the count from the data
+      await show(defaults('home'));
+      const hc = [...document.querySelectorAll('#content .dash-card')].find((c) => new URLSearchParams(c.getAttribute('href')).get('view') === vid);
+      const lt = hc ? (hc.querySelector('.dash-ins-link') || {}).textContent || '' : '';
+      add(vid, `home card opens ${vid} and says "${n} things the numbers say →" with the top three claims`, !!hc && lt === `${n} things the numbers say →` && hc.querySelectorAll('.dash-ins li').length === Math.min(3, n), hc ? lt : 'no card links to the view');
+    }
+  }
+
   function report() {
     const pass = results.filter((r) => r.pass).length, fail = results.length - pass;
     document.title = fail ? `SELFTEST FAIL ${fail} of ${results.length}` : `SELFTEST PASS ${pass}/${results.length}`;
@@ -235,6 +348,7 @@
       await baseRateCheck();
       await auDenominatorCheck();
       await viewChecks();
+      await insightsChecks();
       await keyboardChecks();
       await partitionChecks();
       await pageChecks();

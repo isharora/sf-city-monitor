@@ -15,6 +15,9 @@
     nw: { id: 'nw', num: 4, module: 'network', title: 'Money network', short: 'Money network', what: 'How money moves between donors, officials, lobbyists and the organizations that get city contracts and approvals.', story: 'network/commentary/story_nw.json', yearsKey: 'years', yearsLabel: 'Years', filterKeys: ['years', 'flow', 'etype', 'amt'], views: ['nw-overview', 'nw-graph', 'nw-ban', 'nw-behested', 'nw-lobby', 'nw-concentration', 'nw-loop', 'nw-entities'] },
   };
   const DASH_BY_MODULE = { nonprofits: 'np', performance: 'pf', audits: 'au', network: 'nw' };
+  // Insights views (js/views-insights.js) exist only for modules whose insights/insights.json passed the bundle check;
+  // each is listed first ("★ Insights") and is where the dashboard switcher and the home cards land.
+  Object.values(M.dashes).forEach((d) => { const vid = `${d.id}-insights`; if (M.views[vid]) { d.views.unshift(vid); d.insights = vid; } });
   const FILTER_LABELS = { years: 'Years', dept: 'Department', area: 'Service area', size: 'Size', group: 'Department group', real: 'Dollars', source: 'Recommended by', topic: 'Topic', flow: 'Flow type', etype: 'Entity type', amt: 'Minimum amount' };
   let METAS = {}, STORIES = {}, SITE = { departments: [], groups: [], modules: {} };
 
@@ -44,13 +47,16 @@
     const nav = document.getElementById('nav'); nav.innerHTML = '';
     if (cur) {
       h('div', 'nav-group-title', nav, cur.title);
-      cur.views.forEach((id, i) => { const v = M.views[id]; navBtn(nav, 'nav-item', String(i + 1), v.nav || v.title, st.view === id, () => S.set({ view: id, id: null })); });
+      let n = 0;
+      cur.views.forEach((id) => { const v = M.views[id]; const b = navBtn(nav, 'nav-item' + (v.navNum ? ' nav-insights' : ''), v.navNum || String(++n), v.nav || v.title, st.view === id, () => S.set({ view: id, id: null })); if (v.navNum) b.setAttribute('aria-label', `${v.nav || v.title} (start here)`); });
     } else {
       h('div', 'nav-group-title', nav, 'Site');
       [['home', 'Landing page'], ['search', 'Search'], ['methods', 'Methods and data']].forEach(([id, label]) => navBtn(nav, 'nav-item', '·', label, st.view === id, () => S.set({ view: id })));
       if (['org', 'dept', 'report', 'official'].includes(st.view)) navBtn(nav, 'nav-item', '·', { org: 'Organization profile', dept: 'Department scorecard', report: 'Report page', official: 'Official profile' }[st.view], true, () => {});
     }
-    const sb = document.getElementById('story-btn'); sb.hidden = !cur || !STORIES[cur.id]; sb.setAttribute('aria-pressed', String(st.mode === 'story'));
+    const view = M.views[st.view] || {};
+    const sb = document.getElementById('story-btn'); sb.hidden = !cur || !STORIES[cur.id] || !!view.noStory; sb.setAttribute('aria-pressed', String(st.mode === 'story'));
+    const pb = document.getElementById('print-btn'); if (pb) pb.hidden = !view.print;
   }
   function renderSampleNotice() {
     const sample = Object.values(M.dashes).filter((d) => modSource(d.id) === 'sample');
@@ -85,6 +91,7 @@
   function renderFilters() {
     const st = S.get(), view = M.views[st.view], dash = dashOf(st.view);
     const bar = document.getElementById('filterbar'); bar.innerHTML = ''; closePops = [];
+    if (view && view.ownFilterBar) { bar.hidden = true; return; } // the view draws its own bar once its data is loaded
     const meta = dash ? METAS[dash.id] : null;
     if (!dash || !meta || !view.filters || !view.filters.length) {
       bar.hidden = !(view && view.filterNote);
@@ -180,6 +187,7 @@
     const dash = dashOf(view.id);
     const content = document.getElementById('content');
     document.title = `${view.title} · SF City Monitor`;
+    document.body.classList.toggle('view-insights', !!view.insights);
     renderNav(); renderFilters();
     const token = ++renderToken;
     content.classList.add('loading');
@@ -207,12 +215,12 @@
     }
     let commentary = null;
     const cpath = commentaryPath(view, dash);
-    try { commentary = await M.data.load(cpath); } catch (e) { commentary = null; }
+    if (!view.customHeader) { try { commentary = await M.data.load(cpath); } catch (e) { commentary = null; } }
     if (token !== renderToken) return;
     content.innerHTML = ''; content.classList.remove('loading'); content.removeAttribute('aria-busy');
     const feeds = [], slots = {}, units = [];
     const ctx = {
-      root: content, state: st, data, meta, metas: METAS, site: SITE, commentary, dash, view, h, empty, slots, missing,
+      root: content, state: st, data, files, meta, metas: METAS, site: SITE, commentary, dash, view, h, empty, slots, missing,
       card: (o) => card(ctx.grid || content, o),
       link(text, patch, cls) { const a = h('a', 'link' + (cls ? ' ' + cls : ''), null, text); a.href = S.serialise(Object.assign({}, S.DEFAULTS, { theme: st.theme }, patch)); a.addEventListener('click', (e) => { if (e.metaKey || e.ctrlKey || e.shiftKey) return; e.preventDefault(); S.set(Object.assign({ mode: 'explore', id: null }, patch)); }); return a; },
       feed(label, matched, total) { feeds.push({ label, matched, total }); },
@@ -235,7 +243,8 @@
       isSample(dashId) { return modSource(dashId) === 'sample'; },
       sampleTag(dashId) { return modSource(dashId) === 'sample' ? h('span', 'badge badge-sample', null, 'sample data') : null; },
     };
-    M.commentary.renderHeader(h('div', '', content), view, commentary, view.kicker || (dash ? `${dash.num} · ${dash.title}` : 'SF City Monitor'), { missingCommentary: !commentary && dash && view.headline !== false, real: dash && modSource(dash.id) === 'real' });
+    ctx.headEl = h('div', '', content);
+    if (!view.customHeader) M.commentary.renderHeader(ctx.headEl, view, commentary, view.kicker || (dash ? `${dash.num} · ${dash.title}` : 'SF City Monitor'), { missingCommentary: !commentary && dash && view.headline !== false, real: dash && modSource(dash.id) === 'real' });
     if (dash && modSource(dash.id) === 'sample') sampleBanner(content, dash);
     // Entity and site pages put their header of facts first; dashboards put the live sentences and the data strip first.
     if (!dash) ctx.pre = h('div', '', content);
@@ -250,12 +259,13 @@
     const sources = []; Object.values(METAS).forEach((m) => (m && m.sources || []).forEach((s) => { if (srcIds.has(s.id) && !sources.some((x) => x.id === s.id)) sources.push(s); }));
     if (dash && view.filters && view.filters.length && !feeds.length) console.warn(`[filters] view ${view.id} declares filters but registered no filtered record counts`);
     const filtersText = view.filters && view.filters.length ? describeFilters(st, view, dash, meta) : (dash ? (view.filterNote || 'This view has no filters; it shows all records.') : 'Profile pages show all years; filters live in the dashboards.');
-    M.commentary.renderData(ctx.dataEl, { feeds, units, files: fileList(Object.assign({ commentary: cpath }, files), Object.assign({ commentary }, data), missing), sources, asOf: meta ? meta.as_of : latestAsOf(), open: st.data, onToggle: (open) => S.set({ data: open }, { silent: true }), filtersText, sampleNote: dash && modSource(dash.id) === 'sample' ? 'Sample files come from design/prototype/sample-data; the module’s own export replaces them when it sets "sample": false.' : null });
+    (view.renderData ? (o) => view.renderData(ctx, o) : (o) => M.commentary.renderData(ctx.dataEl, o))({ feeds, units, files: fileList(Object.assign({ commentary: cpath }, files), Object.assign({ commentary }, data), missing), sources, asOf: meta ? meta.as_of : latestAsOf(), open: st.data, onToggle: (open) => S.set({ data: open }, { silent: true }), filtersText, sampleNote: dash && modSource(dash.id) === 'sample' ? 'Sample files come from design/prototype/sample-data; the module’s own export replaces them when it sets "sample": false.' : null });
     M.commentary.renderAnalysis(h('div', '', content), commentary);
     M.commentary.renderCaveats(h('div', '', content), commentary);
     if (window.scrollY > 0 && st.mode !== 'story') window.scrollTo({ top: 0 });
     renderStoryBar();
     M.app.lastView = { id: view.id, feeds, units, slots };
+    if (view.afterRender) { try { view.afterRender(ctx); } catch (err) { console.error(err); M.app.errors.push(`${view.id}: ${err.message}`); } }
   }
   function latestAsOf() { return Object.values(SITE.modules || {}).map((m) => m.as_of).filter(Boolean).sort().pop() || null; }
   function fileList(files, data, missing) {
@@ -332,7 +342,7 @@
     const st = S.get(), d = dashOf(st.view);
     if (e.key === '/') { e.preventDefault(); input.focus(); }
     else if (e.key === 'd') document.getElementById('theme-toggle').click();
-    else if (e.key === 's' && d && STORIES[d.id]) (st.mode === 'story' ? S.set({ mode: 'explore' }) : enterStory(d.id, 0));
+    else if (e.key === 's' && d && STORIES[d.id] && !(M.views[st.view] || {}).noStory) (st.mode === 'story' ? S.set({ mode: 'explore' }) : enterStory(d.id, 0));
     else if (d && (e.key === ']' || e.key === '[')) { const i = d.views.indexOf(st.view); S.set({ view: d.views[(i + (e.key === ']' ? 1 : d.views.length - 1)) % d.views.length], id: null }); }
     else if (e.key === 'ArrowRight' && st.mode === 'story' && d && STORIES[d.id]) enterStory(d.id, st.step + 1);
     else if (e.key === 'ArrowLeft' && st.mode === 'story' && d && STORIES[d.id]) enterStory(d.id, st.step - 1);

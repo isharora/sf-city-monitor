@@ -51,6 +51,17 @@ department scorecard's commentary) are bundled as one optional file per id. `con
 exact-text corrections to module commentary, applied to the bundled copy only (the loader then always uses
 it); the bundler warns when a correction no longer matches, meaning the module has fixed its text.
 
+Insights (`<module>/data/site/insights/insights.json`, `design/insights/INSIGHTS_CONTRACT.json` plus the extensions in
+`design/insights/INSIGHTS_DESIGN.md` §10) are one optional file per module, validated by `validate_insights()` in
+`bundle.py` against `INSIGHTS` in `contracts.py`: missing fields, unknown chart types, ranks that are not 1..n, series
+whose length differs from `x.values`, a number without a source and similar are errors (the file is not used);
+an `explore.view` that is not a view, an unknown param key, department codes not in `meta.json`, long titles and
+highlights that match nothing are warnings. A module whose file validates gets a `★ Insights` view (`pf-insights`,
+`np-insights`, `au-insights`, `nw-insights`; `js/views-insights.js`, `js/insights-charts.js`, `css/insights.css`),
+listed first in its navigation and opened by the dashboard switcher and the home card; without the file the view does
+not exist. Its URL state is `topic` (insight themes), `dept`, `verdict`, `insight`, `evidence=all` and `data=1`.
+The report ends with `Contract check: N errors, M warnings`.
+
 Rerun the bundler whenever a module re-exports. Site-level commentary (home, search, methods, entity
 pages) lives in `site/content/commentary/`.
 
@@ -78,7 +89,11 @@ in-page self-test (`index.html?selftest=1`, also usable by hand), which:
   that undeclared ones are labelled "Not on this view: … (reason)", and that counts are registered;
 - checks that records matched per department / recommender / group / flow type add up to the
   unfiltered total (no filter drops or double-counts rows);
-- renders every entity page and checks unknown ids.
+- renders every entity page and checks unknown ids;
+- on every insights view: every card draws its chart with a table twin and no console errors, the header counts
+  match the file, each theme / department / verdict filter changes the cards, the 30-second list and the data strip
+  together (and an empty filter shows the empty state), `insight=` and `evidence=all` open the evidence, the keyboard
+  moves between cards, and every Explore link opens a real view with each of its parameters applied.
 
 Results: page title `SELFTEST PASS n/n`, a table in the page, and `/tmp/scm_site/selftest.json`.
 
@@ -102,6 +117,8 @@ js/data.js            manifest-driven lazy loader (chunks or fetch)
 js/state.js           URL state
 js/commentary.js      finding, live sentences with fallbacks, analyst's read, caveats, data strip/panel
 js/views-*.js         one scope() per dashboard; every card consumes it
+js/views-insights.js  the ★ Insights view of each dashboard that ships insights/insights.json
+js/insights-charts.js one focused SVG chart per insight (nine forms, table twins); css/insights.css
 js/selftest.js        ?selftest=1
 tools/                bundle.py, contracts.py, check.sh/check.py, fixture_test.sh
 content/commentary/   site-level commentary

@@ -87,6 +87,20 @@ def states():
             ("data-panel", "view=np-flows&data=1"), ("graph-focus", "view=nw-graph&v.focus=" + (con["id"] if con else "")),
             ("filtered-np", "view=np-flows&dept=HSH&area=homeless&real=0"), ("unknown-org", "view=org&id=org-does-not-exist"),
             ("empty-filters", "view=au-status&years=2014-2014&topic=it&source=bla")]
+    # insights views (only for modules whose insights/insights.json is in the bundle): top, data panel, a filtered
+    # and an empty state, every card on its own (shot=1 needs no scrolling) with its evidence open, and evidence=all
+    man = json.load(open(os.path.join(SITE, "data", "manifest.json")))
+    for dash, m in man["modules"].items():
+        e = m["files"].get(f"{m['module']}/insights/insights.json") or {}
+        if e.get("status") != "ok":
+            continue
+        rows = chunk_rows(f"{m['module']}/insights/insights.json", "insights")
+        v = f"{dash}-insights"
+        out += [(v, f"view={v}"), (f"{v}-data", f"view={v}&data=1"), (f"{v}-evidence-all", f"view={v}&evidence=all"),
+                (f"{v}-empty", f"view={v}&verdict=fragile&topic=zzz")]
+        if rows:
+            out.append((f"{v}-filtered", f"view={v}&topic={rows[0]['theme']}&verdict={rows[0]['robustness']['verdict']}"))
+            out += [(f"{v}-card-{r['rank']:02d}", f"view={v}&shot=1&insight={r['id']}") for r in rows]
     return out
 
 

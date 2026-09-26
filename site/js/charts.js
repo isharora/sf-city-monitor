@@ -33,7 +33,7 @@
 
   // ---------------------------------------------------------------- tooltip (single instance)
   let tipEl;
-  function tip() { if (!tipEl) { tipEl = h('div', 'tip', document.body); tipEl.setAttribute('role', 'tooltip'); tipEl.hidden = true; } return tipEl; }
+  function tip() { if (!tipEl) { tipEl = document.querySelector('body > .tip') || h('div', 'tip', document.body); tipEl.setAttribute('role', 'tooltip'); tipEl.hidden = true; } return tipEl; }
   function showTip(evt, title, rows, anchor) {
     const t = tip(); t.innerHTML = '';
     if (title) h('div', 'tip-title', t, title);

@@ -209,3 +209,37 @@ STORY_SPEC = {"title": "str", "steps": "list"}
 
 # Words that must not appear in commentary unless negated nearby (fairness lint; warnings only).
 FAIRNESS_WORDS = ["violated", "violation", "illegal", "corrupt", "kickback", "bribe", "fraud", "pay-to-play", "quid pro quo"]
+
+# Insights-first page (design/insights/INSIGHTS_CONTRACT.json and INSIGHTS_DESIGN.md §10): one optional file per module.
+# The dashboard gets its "★ Insights" view only when this file validates; errors mean the file is not used.
+INSIGHTS = {
+    "path": "insights/insights.json",
+    "keys": {"sample": "bool", "as_of": "date", "dashboard": "str", "intro": "str", "insights": "list"},
+    "insight": {"id": "str", "rank": "int", "theme": "str", "title": "str", "dek": "str", "why_it_matters": "str", "surprise": "~str?",
+                "numbers": "list", "chart": "dict", "robustness": "dict", "caveats": "~list", "explore": "dict", "departments": "~list", "tags": "~list"},
+    "number": {"label": "str", "value": "str", "source": "str"},
+    "chart": {"type": "str", "title": "str", "subtitle": "~str?", "x": "dict", "y": "dict", "series": "list", "annotations": "~list",
+              "highlight": "~any", "note": "~str?", "totals": "~list"},
+    "x": {"label": "~str?", "values": "list", "unit": "~str?"},
+    "y": {"label": "~str?", "unit": "~str?", "scale": "~str?", "shared": "~bool", "ref": "~dict?"},
+    "series": {"name": "str", "values": "list", "n": "~list", "labels": "~list"},
+    "robustness": {"verdict": "str", "checks": "list", "what_could_make_it_wrong": "~str?"},
+    "explore": {"view": "str", "params": "~dict", "label": "~str?"},
+    "chart_types": ["line", "bar", "hbar", "dumbbell", "slope", "stacked", "smallmultiples", "scatter", "waterfall"],
+    "units": ["index", "$", "$M", "$B", "%", "min", "count", "ratio"],
+    "themes": ["spending-growth", "outcomes", "efficiency", "staffing", "budgeting-practice", "measurement", "capital", "equity", "other"],
+    "verdicts": ["robust", "fragile"],
+    # most series a chart may draw without a highlight (INSIGHTS_DESIGN §5: more than four is a data error; stacked has 7 slots)
+    "max_series_unhighlighted": {"stacked": 7, "smallmultiples": None, "slope": None},
+    "max_series_default": 4,
+    "title_max": 92,
+    "annotation_label_max": 24,
+    # URL keys the site understands (js/state.js); explore.params keys must be one of these or v.<key>
+    "param_keys": ["years", "dept", "area", "size", "group", "real", "source", "topic", "flow", "etype", "amt", "id", "q", "data"],
+    "list_params": {"dept": "dim:dept", "group": "dim:group", "area": "dim:area", "size": "dim:size_band", "source": "dim:source", "topic": "dim:topic", "flow": "dim:flow", "etype": "dim:etype"},
+    # views an insight may link to besides the module's own dashboard views
+    "site_views": ["dept", "org", "report", "official", "search", "methods", "home"],
+}
+# filters each dashboard's views can take from the URL (mirror of M.dashes[*].filterKeys in js/app.js)
+DASH_FILTERS = {"nonprofits": ["years", "dept", "area", "size", "real"], "performance": ["years", "group", "dept", "real"],
+                "audits": ["years", "source", "dept", "topic"], "network": ["years", "flow", "etype", "amt"]}

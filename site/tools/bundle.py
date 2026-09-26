@@ -509,6 +509,228 @@ def validate_commentary(view, obj, real):
     return rep
 
 
+# ------------------------------------------------------------------ insights (design/insights/INSIGHTS_CONTRACT.json + INSIGHTS_DESIGN.md §10)
+def _num_or_null(v):
+    return v is None or (isinstance(v, (int, float)) and not isinstance(v, bool) and v == v and v not in (float("inf"), float("-inf")))
+
+
+def validate_insights(module, obj, meta, real):
+    """Errors make the file unusable (the Insights view is not offered); warnings are printed and kept in the manifest.
+    Every message names the insight (rank and id) and the field, so the analyst can find it."""
+    I = C.INSIGHTS
+    rep = Report()
+    if not isinstance(obj, dict):
+        rep.err("top level is not a JSON object")
+        return rep, 0
+    check_fields(obj, I["keys"], "insights.json", rep)
+    if isinstance(obj.get("dashboard"), str) and obj["dashboard"] != module:
+        rep.err(f"dashboard is {obj['dashboard']!r} but the file is in {module}/ (it would render under the wrong dashboard)")
+    if real and obj.get("sample") is True:
+        rep.warn('"sample": true inside a real export: the page will carry "Sample insights" badges')
+    items = obj.get("insights") if isinstance(obj.get("insights"), list) else []
+    if isinstance(obj.get("insights"), list) and not items:
+        rep.err("insights is empty")
+    depts = dim_ids(meta, "dept") if meta else None
+    fy = (meta or {}).get("fiscal_years") or (meta or {}).get("years") or {}
+    views = set(C.VIEWS.get(module, [])) | {DASH[module] + "-insights"} | set(I["site_views"])
+    ids, ranks = [], []
+    for k, ins in enumerate(items):
+        if not isinstance(ins, dict):
+            rep.err(f"insights[{k}] is not an object")
+            continue
+        where = f"insights[{k}] (rank {ins.get('rank')}, {ins.get('id')})"
+        check_fields(ins, I["insight"], where, rep)
+        ids.append(ins.get("id")); ranks.append(ins.get("rank"))
+        if isinstance(ins.get("id"), str) and not re.match(r"^[a-z0-9][a-z0-9-]*$", ins["id"]):
+            rep.err(f"{where}: id must be a lowercase slug (letters, digits, hyphens); it is used in URLs and as an element id")
+        if isinstance(ins.get("theme"), str) and ins["theme"] not in I["themes"]:
+            rep.warn(f"{where}: theme {ins['theme']!r} is not in the contract's vocabulary (shown title-cased)")
+        if isinstance(ins.get("title"), str) and len(ins["title"]) > I["title_max"]:
+            rep.warn(f"{where}: title is {len(ins['title'])} characters (contract: under ~90; the claim wraps to three lines)")
+        # numbers: every one carries a source
+        nums = ins.get("numbers") if isinstance(ins.get("numbers"), list) else []
+        if isinstance(ins.get("numbers"), list) and not nums:
+            rep.err(f"{where}: numbers is empty (every insight cites at least one number)")
+        for j, n in enumerate(nums):
+            if not isinstance(n, dict):
+                rep.err(f"{where}: numbers[{j}] is not an object"); continue
+            check_fields(n, I["number"], f"{where} numbers[{j}]", rep)
+            if isinstance(n.get("source"), str) and not n["source"].strip():
+                rep.err(f"{where}: numbers[{j}] has an empty source")
+        # robustness
+        rb = ins.get("robustness")
+        if isinstance(rb, dict):
+            check_fields(rb, I["robustness"], f"{where} robustness", rep)
+            if isinstance(rb.get("verdict"), str) and rb["verdict"] not in I["verdicts"]:
+                rep.err(f"{where}: robustness.verdict {rb['verdict']!r} is not robust|fragile")
+            if isinstance(rb.get("checks"), list):
+                if not rb["checks"]:
+                    rep.warn(f"{where}: robustness.checks is empty")
+                if any(not isinstance(c, str) for c in rb["checks"]):
+                    rep.err(f"{where}: robustness.checks must be strings")
+        # chart
+        ch = ins.get("chart")
+        if isinstance(ch, dict):
+            _validate_chart(ch, f"{where} chart", rep)
+        # departments
+        for d in ins.get("departments") or []:
+            if not isinstance(d, str):
+                rep.err(f"{where}: departments must be codes (strings), got {d!r}")
+            elif depts is not None and d not in depts:
+                rep.warn(f"{where}: department {d!r} is not in {module}/meta.json dimensions.dept (shown as plain text, no scorecard link)")
+        # explore deep link
+        ex = ins.get("explore")
+        if isinstance(ex, dict):
+            check_fields(ex, I["explore"], f"{where} explore", rep)
+            v = ex.get("view")
+            if isinstance(v, str) and v not in views:
+                rep.warn(f"{where}: explore.view {v!r} is not a view of this dashboard or a site page (the link would open the home page)")
+            params = ex.get("params") if isinstance(ex.get("params"), dict) else {}
+            for pk, pv in params.items():
+                if not (pk in I["param_keys"] or pk.startswith("v.")):
+                    rep.warn(f"{where}: explore.params key {pk!r} is not a site URL key ({', '.join(I['param_keys'])}, v.<key>); it would be ignored")
+                    continue
+                if pk in I["list_params"] and pk not in C.DASH_FILTERS.get(module, []) :
+                    rep.warn(f"{where}: explore.params {pk!r} is not a filter of this dashboard ({', '.join(C.DASH_FILTERS.get(module, []))})")
+                if pk == "years":
+                    m = re.match(r"^(\d{4})(?:-(\d{4}))?$", str(pv))
+                    if not m:
+                        rep.warn(f"{where}: explore.params years {pv!r} is not YYYY or YYYY-YYYY")
+                    elif isinstance(fy.get("min"), int) and isinstance(fy.get("max"), int):
+                        a, b = int(m.group(1)), int(m.group(2) or m.group(1))
+                        if a < fy["min"] or b > fy["max"]:
+                            rep.warn(f"{where}: explore.params years {pv} is outside the data ({fy['min']}-{fy['max']}); the view clamps it")
+                if pk in I["list_params"] and meta:
+                    allowed = dim_ids(meta, I["list_params"][pk][4:])
+                    bad = [x for x in str(pv).split(",") if x and allowed is not None and x not in allowed]
+                    if bad:
+                        rep.warn(f"{where}: explore.params {pk} has values not in meta.dimensions.{I['list_params'][pk][4:]}: {', '.join(bad)}")
+                if pk == "real" and str(pv) not in ("0", "1"):
+                    rep.warn(f"{where}: explore.params real should be 0 (nominal) or 1")
+    # ranks 1..n and unique ids
+    if ids and len(set(map(str, ids))) != len(ids):
+        dup = sorted({str(x) for x in ids if ids.count(x) > 1})
+        rep.err(f"duplicate insight ids: {', '.join(dup)}")
+    if ranks and all(isinstance(r, int) and not isinstance(r, bool) for r in ranks) and sorted(ranks) != list(range(1, len(ranks) + 1)):
+        rep.err(f"ranks must be exactly 1..{len(ranks)} (got {sorted(ranks)})")
+    return rep, len(items)
+
+
+def _validate_chart(ch, where, rep):
+    I = C.INSIGHTS
+    check_fields(ch, I["chart"], where, rep)
+    t = ch.get("type")
+    if isinstance(t, str) and t not in I["chart_types"]:
+        rep.err(f"{where}: type {t!r} is not one of {', '.join(I['chart_types'])}")
+    x = ch.get("x") if isinstance(ch.get("x"), dict) else None
+    y = ch.get("y") if isinstance(ch.get("y"), dict) else None
+    if x is not None:
+        check_fields(x, I["x"], f"{where}.x", rep)
+    if y is not None:
+        check_fields(y, I["y"], f"{where}.y", rep)
+        if isinstance(y.get("unit"), str) and y["unit"] not in I["units"]:
+            rep.warn(f"{where}.y.unit {y['unit']!r} is not one of {', '.join(I['units'])} (formatted as a count)")
+        if y.get("scale") is not None and y.get("scale") != "log":
+            rep.warn(f"{where}.y.scale {y.get('scale')!r}: only \"log\" is supported (on slope charts)")
+        if y.get("scale") == "log" and t != "slope":
+            rep.warn(f"{where}.y.scale \"log\" is only drawn on slope charts")
+        if "shared" in y and t != "smallmultiples":
+            rep.warn(f"{where}.y.shared only applies to smallmultiples")
+        ref = y.get("ref")
+        if isinstance(ref, dict):
+            if not _num_or_null(ref.get("value")) or ref.get("value") is None or not isinstance(ref.get("label"), str):
+                rep.err(f"{where}.y.ref needs a numeric value and a label")
+            if t not in ("line", "bar", "hbar"):
+                rep.warn(f"{where}.y.ref is drawn on line, bar and hbar charts only")
+    xs = x.get("values") if x and isinstance(x.get("values"), list) else None
+    series = ch.get("series") if isinstance(ch.get("series"), list) else []
+    if isinstance(ch.get("series"), list) and not series:
+        rep.err(f"{where}: series is empty")
+    names = []
+    for j, s in enumerate(series):
+        if not isinstance(s, dict):
+            rep.err(f"{where}.series[{j}] is not an object"); continue
+        check_fields(s, I["series"], f"{where}.series[{j}]", rep)
+        names.append(s.get("name"))
+        vals = s.get("values") if isinstance(s.get("values"), list) else None
+        if vals is not None:
+            if any(not _num_or_null(v) for v in vals):
+                rep.err(f"{where}.series[{j}] ({s.get('name')}): values must be numbers or null")
+            if xs is not None and len(vals) != len(xs):
+                rep.err(f"{where}.series[{j}] ({s.get('name')}): {len(vals)} values for {len(xs)} x values")
+        for extra in ("n", "labels"):
+            if isinstance(s.get(extra), list) and vals is not None and len(s[extra]) != len(vals):
+                rep.err(f"{where}.series[{j}].{extra}: {len(s[extra])} entries for {len(vals)} values")
+        if isinstance(s.get("n"), list) and t not in ("bar", "hbar"):
+            rep.warn(f"{where}.series[{j}].n is shown on bar and hbar charts only")
+        if isinstance(s.get("labels"), list) and t != "scatter":
+            rep.warn(f"{where}.series[{j}].labels is used by scatter charts only")
+    hl = ch.get("highlight")
+    if hl is not None and not isinstance(hl, (str, list)):
+        rep.err(f"{where}.highlight must be a string, a list of strings, or null")
+    hls = [h for h in (hl if isinstance(hl, list) else [hl]) if isinstance(h, str) and h != ""]
+    if hls:
+        cats = {str(v) for v in xs or []}
+        labels = {str(l) for s in series if isinstance(s, dict) for l in (s.get("labels") or [])}
+        for h in hls:
+            if h not in names and h not in cats and h not in labels:
+                rep.warn(f"{where}.highlight {h!r} names no series, category or point (nothing is emphasized)")
+    elif t:
+        cap = I["max_series_unhighlighted"].get(t, I["max_series_default"])
+        if cap is not None and len(series) > cap:
+            rep.err(f"{where}: {len(series)} series and no highlight (a {t} chart has {cap} colour slots; fold the rest or set highlight)")
+    if t == "dumbbell" and len(series) != 2:
+        rep.err(f"{where}: a dumbbell needs exactly two series (first and second period), got {len(series)}")
+    if t == "slope" and xs is not None and len(xs) != 2:
+        rep.err(f"{where}: a slope chart needs exactly two x values, got {len(xs)}")
+    if t == "scatter" and series and isinstance(series[0], dict) and not isinstance(series[0].get("labels"), list):
+        rep.warn(f"{where}: scatter points have no labels (series[0].labels); only values will show")
+    if t == "waterfall":
+        tot = ch.get("totals")
+        if tot is not None and (not isinstance(tot, list) or any(not isinstance(i, int) or isinstance(i, bool) or not (0 <= i < len(xs or [])) for i in tot)):
+            rep.err(f"{where}.totals must list indices into x.values")
+    elif ch.get("totals") is not None:
+        rep.warn(f"{where}.totals only applies to waterfall charts")
+    anns = ch.get("annotations") if isinstance(ch.get("annotations"), list) else []
+    ax = []
+    for j, a in enumerate(anns):
+        if not isinstance(a, dict) or "x" not in a or not isinstance(a.get("label"), str):
+            rep.err(f"{where}.annotations[{j}] needs x and label"); continue
+        if xs is not None and a["x"] not in xs and str(a["x"]) not in {str(v) for v in xs}:
+            rep.warn(f"{where}.annotations[{j}] x={a['x']!r} is not one of the x values (not drawn)")
+        ax.append(a)
+    for a, b in zip(ax, ax[1:]):
+        if xs and a["x"] in xs and b["x"] in xs and abs(xs.index(a["x"]) - xs.index(b["x"])) <= 1 and max(len(a["label"]), len(b["label"])) > I["annotation_label_max"]:
+            rep.warn(f"{where}: annotations at adjacent x ({a['x']}, {b['x']}) should keep labels under ~{I['annotation_label_max']} characters")
+
+
+def bundle_insights(module, root, decision, mod, meta):
+    """One optional logical file per module: <module>/insights/insights.json. Only a real export's file is used
+    (a sample dashboard never shows real insights, and vice versa)."""
+    rel = C.INSIGHTS["path"]
+    logical = f"{module}/{rel}"
+    p = os.path.join(root, rel) if decision == "real" and root else None
+    entry = {"status": "missing", "bytes": 0, "raw": [], "sample": decision == "sample", "optional": True, "insights": True,
+             "errors": [], "warnings": [], "notes": [], "rows": 0}
+    if p and os.path.isfile(p):
+        entry["raw"] = [rel_to_site(p)]
+        try:
+            obj, n = read_json(p)
+            rep, rows = validate_insights(module, obj, meta, True)
+            entry.update(bytes=n, rows=rows, errors=rep.errors, warnings=rep.warnings, sample=bool(isinstance(obj, dict) and obj.get("sample")))
+            if n > FILE_LIMIT:
+                entry["warnings"].append(f"{n/1e3:.0f} KB is over the contract's 400 KB; bundled in chunks")
+            if not rep.errors:
+                entry["status"] = "ok"
+                entry["chunks"], entry["split_key"], entry["chunk_bytes"] = write_chunks(logical, obj)
+            else:
+                entry["status"] = "invalid"
+        except (ValueError, UnicodeDecodeError) as e:
+            entry.update(status="invalid", errors=[f"not valid JSON: {e}"])
+    mod["files"][logical] = entry
+    return entry
+
+
 # ------------------------------------------------------------------ discovery and loading
 def find_real_root(module):
     base = os.path.join(ROOT, module, "data", "site")
@@ -807,6 +1029,7 @@ def bundle_module(module, report_lines, quiet):
             except ValueError as e:
                 entry.update(status="invalid", errors=[f"not valid JSON: {e}"])
             mod["files"][logical] = entry
+    bundle_insights(module, real_root, decision, mod, loaded.get("meta.json"))
     meta = loaded.get("meta.json") or {}
     # small headline numbers the landing page shows without loading large files
     mod["_highlights"] = {}
@@ -849,7 +1072,7 @@ def bundle_module(module, report_lines, quiet):
         flag = {"ok": "OK     ", "invalid": "INVALID", "missing": "MISSING"}[e["status"]]
         if e["status"] == "missing" and e.get("optional"):
             flag = "absent "
-        extra = (f"{e['rows']:>8,} rows" if e.get('rows') else " " * 13) + f" {e['bytes']/1e3:>7.0f} KB" + (f" → {e['chunk_bytes']/1e3:.0f} KB bundled" if e.get('chunk_bytes') and e['chunk_bytes'] < 0.8 * e['bytes'] else "") if e["status"] != "missing" else ""
+        extra = (f"{e['rows']:>8,} " + ("insights" if e.get("insights") else "rows    ") if e.get('rows') else " " * 17) + f" {e['bytes']/1e3:>7.0f} KB" + (f" → {e['chunk_bytes']/1e3:.0f} KB bundled" if e.get('chunk_bytes') and e['chunk_bytes'] < 0.8 * e['bytes'] else "") if e["status"] != "missing" else ""
         L.append(f"   {flag} {logical:<48} {extra}")
         for x in e["errors"][:6]:
             L.append(f"            error: {x}")
@@ -902,7 +1125,7 @@ def extra_files(module, root):
     for dirpath, _, fs in os.walk(root):
         for f in fs:
             rp = os.path.relpath(os.path.join(dirpath, f), root)
-            if f.endswith(".json") and not any(rp == k or (C.SPEC[module][k].get("split") and fnmatch.fnmatch(rp, C.SPEC[module][k]["split"])) for k in C.SPEC[module]) and not rp.startswith("commentary") and not any(fnmatch.fnmatch(rp, pat) for pat in C.EACH.get(module, {})):
+            if f.endswith(".json") and not any(rp == k or (C.SPEC[module][k].get("split") and fnmatch.fnmatch(rp, C.SPEC[module][k]["split"])) for k in C.SPEC[module]) and not rp.startswith("commentary") and rp != C.INSIGHTS["path"] and not any(fnmatch.fnmatch(rp, pat) for pat in C.EACH.get(module, {})):
                 extra.append(rp)
     return sorted(extra)
 
@@ -968,7 +1191,12 @@ def main(argv):
     nchunks = sum(1 for dp, _, fs in os.walk(OUT) for f in fs if f.endswith(".js")) - 1
     lines.append("")
     lines.append("Summary: " + ", ".join(f"{m} {mods[m]['source']}" for m in MODULES) + f"; {nchunks} chunks, {total/1e6:.2f} MB in site/data/")
-    bad = [(m, k) for m in MODULES for k, e in mods[m]["files"].items() if e["status"] != "ok" and not e.get("optional")]
+    bad = [(m, k) for m in MODULES for k, e in mods[m]["files"].items() if (e["status"] != "ok" and not e.get("optional")) or e["status"] == "invalid"]
+    entries = [e for m in MODULES for e in list(mods[m]["files"].values()) + list(mods[m]["commentary"].values())] + list(site_files.values())
+    n_err, n_warn = sum(len(e.get("errors") or []) for e in entries), sum(len(e.get("warnings") or []) for e in entries)
+    ins = [f"{DASH[m]}-insights ({mods[m]['files'][f'{m}/' + C.INSIGHTS['path']]['rows']} insights)" for m in MODULES if mods[m]["files"].get(f"{m}/" + C.INSIGHTS["path"], {}).get("status") == "ok"]
+    lines.append("Insights views: " + (", ".join(ins) if ins else "none") + "; modules without a valid insights/insights.json get no Insights view")
+    lines.append(f"Contract check: {n_err} error{'s' if n_err != 1 else ''}, {n_warn} warning{'s' if n_warn != 1 else ''} across {len(entries)} files")
     if bad:
         lines.append("Unavailable files (their views show 'analysis not available yet'): " + ", ".join(k for _, k in bad))
     print("\n".join(lines))

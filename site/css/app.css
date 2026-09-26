@@ -108,6 +108,7 @@ kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--border-
 .icon-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--surface-1); border: 1px solid var(--border-strong); border-radius: 8px; padding: 5px 10px; font-size: 13px; cursor: pointer; color: var(--text-secondary); white-space: nowrap; }
 .icon-btn:hover { color: var(--text-primary); }
 .icon-btn[aria-pressed="true"] { background: var(--text-primary); color: var(--surface-1); border-color: var(--text-primary); }
+.icon-btn[hidden], .tbl-btn[hidden] { display: none; }
 .sample-note { font-size: 12px; color: var(--text-secondary); }
 
 /* filters: only filters that apply to every card on the view are rendered */

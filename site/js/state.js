@@ -10,6 +10,10 @@
      &real=0                   nominal dollars (default real)     nonprofits, performance
      &source=csa,cgj           recommending body                  audits
      &topic=contracts          audit topics                       audits
+                               (on an insights view: insight themes, e.g. topic=staffing,outcomes)
+     &verdict=fragile          insight robustness verdict         insights views
+     &insight=<id>             current insight (evidence open)    insights views
+     &evidence=all             every insight's evidence open      insights views
      &flow=contribution        flow types                         network
      &etype=contractor         entity types                       network
      &amt=10000                minimum amount                     network
@@ -19,7 +23,7 @@
 (function () {
   const M = (window.SFCM = window.SFCM || {});
   const LIST_KEYS = ['dept', 'area', 'size', 'group', 'source', 'topic', 'flow', 'etype'];
-  const DEFAULTS = { view: 'home', years: null, dept: [], area: [], size: [], group: [], real: true, source: [], topic: [], flow: [], etype: [], amt: 0, id: null, q: '', theme: 'auto', mode: 'explore', step: 0, data: false, v: {} };
+  const DEFAULTS = { view: 'home', years: null, dept: [], area: [], size: [], group: [], real: true, source: [], topic: [], flow: [], etype: [], amt: 0, verdict: '', insight: '', evidence: '', id: null, q: '', theme: 'auto', mode: 'explore', step: 0, data: false, v: {} };
   let state = parse(location.search);
   const subs = new Set();
 
@@ -33,6 +37,9 @@
     if (q.get('amt')) s.amt = Math.max(0, +q.get('amt') || 0);
     if (!['explore', 'story'].includes(s.mode)) s.mode = 'explore';
     if (!['auto', 'light', 'dark'].includes(s.theme)) s.theme = 'auto';
+    if (['robust', 'fragile'].includes(q.get('verdict'))) s.verdict = q.get('verdict');
+    if (q.get('insight')) s.insight = q.get('insight');
+    if (q.get('evidence') === 'all') s.evidence = 'all';
     if (q.get('id')) s.id = q.get('id');
     if (q.get('q')) s.q = q.get('q');
     if (q.get('theme')) s.theme = q.get('theme');
@@ -49,6 +56,9 @@
     for (const k of LIST_KEYS) if (s[k].length) q.set(k, s[k].join(','));
     if (!s.real) q.set('real', '0');
     if (s.amt) q.set('amt', String(s.amt));
+    if (s.verdict) q.set('verdict', s.verdict);
+    if (s.insight) q.set('insight', s.insight);
+    if (s.evidence) q.set('evidence', s.evidence);
     if (s.id) q.set('id', s.id);
     if (s.q) q.set('q', s.q);
     if (s.theme !== 'auto') q.set('theme', s.theme);
@@ -58,11 +68,18 @@
     return '?' + q.toString();
   }
   function get() { return state; }
+  const isInsights = (view) => /-insights$/.test(String(view || ''));
   function set(patch, opts) {
     const next = Object.assign({}, state, patch);
     if (patch.v) next.v = Object.assign({}, state.v, patch.v);
     const changedView = next.view !== state.view;
     if (changedView && !patch.v) next.v = {}; // per-view controls do not leak across views
+    if (changedView) {
+      // verdict / insight / evidence belong to the insights views only; `topic` means insight themes there and
+      // audit topics elsewhere, so it never carries across that boundary.
+      for (const k of ['verdict', 'insight', 'evidence']) if (!(k in patch)) next[k] = DEFAULTS[k];
+      if ((isInsights(state.view) || isInsights(next.view)) && !('topic' in patch)) next.topic = [];
+    }
     state = next;
     try { history.replaceState(null, '', serialise(state) + location.hash); } catch (e) { /* some file:// contexts refuse; state still applies */ }
     for (const fn of subs) fn(state, { changedView, patch, silent: opts && opts.silent });

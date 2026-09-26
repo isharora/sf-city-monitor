@@ -48,7 +48,13 @@
         const top = ctx.h('div', 'num', c, `Dashboard ${d.num}`); if (ctx.isSample(d.id)) { top.appendChild(document.createTextNode(' ')); ctx.h('span', 'badge badge-sample', top, 'sample data'); }
         ctx.h('h2', '', c, d.title); ctx.h('p', '', c, d.what);
         const k = ctx.h('div', 'kpis', c); (K[d.id] || [kp('not available yet', '–')]).forEach((x) => { const s = ctx.h('div', 'kpi', k); ctx.h('b', '', s, x.value); ctx.h('span', '', s, x.label); });
-        const vs = ctx.h('div', 'views', c); d.views.forEach((id) => ctx.h('span', '', vs, M.views[id].nav || M.views[id].title));
+        const ins = d.insights && ctx.data['ins_' + d.id];
+        if (ins && ins.insights && ins.insights.length) { // the dashboard opens on its insights page: say so, with the top three claims
+          const box = ctx.h('div', 'dash-ins', c); const ol = ctx.h('ol', '', box);
+          ins.insights.slice().sort((a, b) => a.rank - b.rank).slice(0, 3).forEach((i) => ctx.h('li', '', ol, i.title));
+          ctx.h('span', 'dash-ins-link', box, `${ins.insights.length} things the numbers say →`);
+        }
+        const vs = ctx.h('div', 'views', c); d.views.filter((id) => !M.views[id].insights).forEach((id) => ctx.h('span', '', vs, M.views[id].nav || M.views[id].title));
         c.addEventListener('click', (e) => { e.preventDefault(); M.state.set({ view: d.views[0], id: null }); });
       });
       // example cross-links use real ids from the loaded data (largest organization, latest report, largest department)
