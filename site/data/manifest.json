@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-26T12:16:32",
+ "generated_at": "2026-09-26T12:18:32",
  "tool": "site/tools/bundle.py",
  "chunk_limit": 380000,
  "modules": {
@@ -2284,7 +2284,7 @@
     },
     "network/insights/insights.json": {
      "status": "ok",
-     "bytes": 74972,
+     "bytes": 74893,
      "raw": [
       "../network/data/site/insights/insights.json"
      ],
@@ -2318,7 +2318,7 @@
       "data/network/insights/insights.0.js"
      ],
      "split_key": null,
-     "chunk_bytes": 65131
+     "chunk_bytes": 65100
     }
    },
    "commentary": {
