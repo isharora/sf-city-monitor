@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-26T11:34:33",
+ "generated_at": "2026-09-26T11:36:43",
  "tool": "site/tools/bundle.py",
  "chunk_limit": 380000,
  "modules": {
@@ -172,16 +172,32 @@
      "chunk_bytes": 251017
     },
     "nonprofits/insights/insights.json": {
-     "status": "missing",
-     "bytes": 0,
-     "raw": [],
+     "status": "ok",
+     "bytes": 74060,
+     "raw": [
+      "../nonprofits/data/site/insights/insights.json"
+     ],
      "sample": false,
      "optional": true,
      "insights": true,
      "errors": [],
-     "warnings": [],
+     "warnings": [
+      "insights[4] (rank 5, dependency-held-steady): theme 'financial-health' is not in the contract's vocabulary (shown title-cased)",
+      "insights[5] (rank 6, dependency-and-corrective-action): theme 'financial-health' is not in the contract's vocabulary (shown title-cased)",
+      "insights[6] (rank 7, doubled-contracts-mostly-got-longer): theme 'contracting' is not in the contract's vocabulary (shown title-cased)",
+      "insights[8] (rank 9, dependent-nonprofits-thin-reserves): theme 'financial-health' is not in the contract's vocabulary (shown title-cased)",
+      "insights[9] (rank 10, emergency-authority-contracts): theme 'contracting' is not in the contract's vocabulary (shown title-cased)",
+      "insights[10] (rank 11, top-recipients-reshuffled): theme 'concentration' is not in the contract's vocabulary (shown title-cased)",
+      "insights[11] (rank 12, pass-through-organizations): theme 'concentration' is not in the contract's vocabulary (shown title-cased)",
+      "insights[16] (rank 17, fastest-rising-dependency): theme 'financial-health' is not in the contract's vocabulary (shown title-cased)"
+     ],
      "notes": [],
-     "rows": 0
+     "rows": 18,
+     "chunks": [
+      "data/nonprofits/insights/insights.0.js"
+     ],
+     "split_key": null,
+     "chunk_bytes": 62790
     }
    },
    "commentary": {
@@ -1306,7 +1322,7 @@
     },
     "performance/insights/insights.json": {
      "status": "ok",
-     "bytes": 80478,
+     "bytes": 80504,
      "raw": [
       "../performance/data/site/insights/insights.json"
      ],
@@ -1314,16 +1330,14 @@
      "optional": true,
      "insights": true,
      "errors": [],
-     "warnings": [
-      "insights[7] (rank 8, unfilled-positions-doubled): title is 94 characters (contract: under ~90; the claim wraps to three lines)"
-     ],
+     "warnings": [],
      "notes": [],
      "rows": 18,
      "chunks": [
       "data/performance/insights/insights.0.js"
      ],
      "split_key": null,
-     "chunk_bytes": 64795
+     "chunk_bytes": 64821
     }
    },
    "commentary": {
